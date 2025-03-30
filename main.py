@@ -8,7 +8,6 @@ from helpers import is_None, not_found, found, no_teams, show_AVG, league_empty_
                     view_all, create_team, remove_team, search_team
 from breezypythongui import *
 
-
 def main():
   flag_action = True 
   while flag_action:
