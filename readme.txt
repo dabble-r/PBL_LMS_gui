@@ -14,11 +14,21 @@ create league class
 
 GUI Layout:
 
-Display Initial (1):
+Display Landing:
+- user has access to GUI window
+- label and text field
+- user prompted to create a league
+
+Display Initial:
 - user has access to list of menu 1 options
+- user selects 1 of 10 options
+  - if no teams created yet 
+    - user prompted to enter team name and max roster size (optional)
+    - user prompted to continue with another action
+- user has access to initial menu
 
 Display User Action (2):
-- user has access to list of menu options
+- user has access to list of initial menu options
   - if Update 
     - user has access to list of menu 2 options 
   - else 

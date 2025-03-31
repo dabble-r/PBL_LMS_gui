@@ -690,23 +690,23 @@ def search_team(league):
 
 # initial menu
 
-def menu_1():
-  #print(f'Welcome to the {league.name}\n')
+def menu_1(league):
+  print(f'Welcome to the {league.name}\n')
   user_action = input('Please select action:\n   1) Create Player\n   2) Search Player\n   3) Update Player\n   4) Remove Player\n\
    5) View all players\n   6) Create Team\n   7) Search Team\n   8) View all teams\n   9) Remove Team\n   10) Quit\nResponse: ')
   return user_action
 
 # initial player stat update menu
 
-def menu_2():
-  #print(f'{player.name} stats update:\n')
+def menu_2(player):
+  print(f'{player.name} stats update:\n')
   user_action = input('Please select action:\n   1) Update offensive stats\n   2) Update defensive stats\n   3) Quit\nResponse: ')
   return user_action
 
 # offensive player stats update menu
 
-def menu_3():
-  #print(f'{player.name} stats update:\n')
+def menu_3(player):
+  print(f'{player.name} stats update:\n')
   user_action = input('Please select action:\n   1) At Bats\n   2) Hits\n   3) Walks\n   4) SO\n   5) HR\n\
    6) RBI:\n   7) Runs:\n   8) Singles:\n   9) Doubles:\n   10) Triples:\n   11) Sac Fly:\n\
    12) Quit\nResponse: ')
