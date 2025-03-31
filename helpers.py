@@ -110,6 +110,8 @@ def league_empty_initial(league, action):
 def save_progress():
   pass
 
+def hide_menu(frame):
+  frame.pack_forget()
 #------------------------------------------------------------------------#
 
 # menu functionality
@@ -155,7 +157,7 @@ def set_stat(method, val):
     method(val)
   except Exception as e:
     print(f'Error: {e}')
-    
+
 # update existing player
 def update_player(league):
   # print('update player\n')
@@ -668,8 +670,9 @@ def view_all(league):
   print(all_players)
 
 # create new team in league
-def create_team(league):
+def create_team(league, menu):
   #print('create t\n')
+  hide_menu(menu)
   new_team_raw = input('Enter a team name and an optional max number of players in a comma separated list: ')
   new_team_list = new_team_raw.split(',')
   name = new_team_list[0]
