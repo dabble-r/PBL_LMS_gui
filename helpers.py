@@ -136,6 +136,26 @@ def search_player(league):
         print(f'Searching {find_player.name}')
         found(find_player)
 
+# general stat update
+def update_stat(update_player):
+  try:
+    stat, val = map(lambda x: x.strip(), input('Enter stat to update and value in a comma separated list: ').split(',')) 
+  except ValueError:
+    print('Error: must enter stat and value')
+    stat, val = map(lambda x: x.strip(), input('Enter stat to update and value in a comma separated list: ').split(',')) 
+  attr = f'set_{stat}'
+  if hasattr(update_player, attr):
+    method = getattr(update_player, attr)
+    if callable(method):
+      print('callable', method)
+      set_stat(method, int(val))
+
+def set_stat(method, val):
+  try:
+    method(val)
+  except Exception as e:
+    print(f'Error: {e}')
+    
 # update existing player
 def update_player(league):
   # print('update player\n')
@@ -198,6 +218,7 @@ def update_player(league):
             at_bats_data = int(at_bats_raw)
             player_to_update.set_at_bat(at_bats_data, flag_val)
             player_to_update.set_AVG()
+            update_stat(player_to_update)
             '''
             #player_raw = input('Enter the player name, team, and at-bats to update in a comma separated list: ')
             #player_data = player_raw.split(',')
