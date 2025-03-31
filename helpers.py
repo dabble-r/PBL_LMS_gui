@@ -684,6 +684,9 @@ def search_team(league):
   print(f'\n{team}\n')
   return team
 
+def quit():
+  print("Session terminated\n")
+  return
 #------------------------------------------------------------------------#
 
 # user menus
