@@ -50,35 +50,6 @@ class LinkedList():
       else:
         traverser = traverser.next 
     #print('end of list')
-
-  '''
-  def remove_team(self, target):
-    traverser = self.head 
-    if traverser.team.name == target:
-      if self.head.next == None:
-        self.head == None 
-        return 'List empty'
-      curr = self.head 
-      self.head = curr.next 
-      curr = None 
-      return
-    else:
-      curr = self.head
-      while curr.next != None:
-        # if curr.next is the target
-        if curr.next.team.name == target:
-          # print curr value
-          print('found', curr.next.team.name)
-          # reassign the next node after current to the next node after curr.net
-          # first verify that is not None, if None, assign curr.next to None
-          if curr.next.next == None:
-            curr.next = None 
-            return
-          curr.next = curr.next.next
-          return
-        curr = curr.next
-    return 'target not found'
-    '''
   
   def find_team(self, target):
     traverser = self.head

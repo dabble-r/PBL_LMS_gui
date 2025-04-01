@@ -72,8 +72,7 @@ class Team():
     #print('Player not found')
     return
 
-  def add_player(self, name, number, team, positions=[]):
-    new_player = Player(name, number, team, positions)
+  def add_player(self, new_player):
     if len(self.players) < self.max:
       self.players.append(new_player)
     else:

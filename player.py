@@ -26,6 +26,13 @@ class Player():
     ret += f'Runs: {self.runs}\nRBI: {self.rbi}\nBABIP: {self.BABIP}\nSLG: {self.SLG}\nAVG: {self.AVG}\nISO: {self.ISO}\n' 
     return ret
   
+  def format_player(self, raw_lst):
+    name, number, team = raw_lst [:3]
+    positions = raw_lst[3:]
+    #print(positions)
+    new_player = Player(name, number, team, positions)
+    return new_player
+
   def format_decimal(self, num):
     return "{:.3f}".format(num)
   
