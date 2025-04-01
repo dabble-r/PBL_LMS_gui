@@ -633,12 +633,12 @@ def remove_player(league):
       find_team.remove_player(name)
 
 # create new player
-def create_player(league):    
-  new_player_raw = input('Enter new player name, number, team, and positions played separated by a comma: ')  
-  new_player_data = new_player_raw.split(',')
+def create_player(league, player_raw):    
+  #new_player_raw = input('Enter new player name, number, team, and positions played separated by a comma: ')  
+  new_player_data = player_raw.split(',')
   if len(new_player_data) < 4:
-    #print('Enter name, number, team, and at least one position')
-    new_player_raw = input('Enter new player name, number, team, and positions played separated by a comma: ') 
+    print('Enter name, number, team, and at least one position')
+    #new_player_raw = input('Enter new player name, number, team, and positions played separated by a comma: ') 
     #flag_action = input('Would you like to perform another action? y/n ').lower().strip() == 'y'
   else:
     name = new_player_data[0].strip()
@@ -670,11 +670,11 @@ def view_all(league):
   print(all_players)
 
 # create new team in league
-def create_team(league, menu):
+def create_team(league, team_raw):
   #print('create t\n')
-  hide_menu(menu)
-  new_team_raw = input('Enter a team name and an optional max number of players in a comma separated list: ')
-  new_team_list = new_team_raw.split(',')
+  #hide_menu(menu)
+  #new_team_raw = input('Enter a team name and an optional max number of players in a comma separated list: ')
+  new_team_list = team_raw.split(',')
   name = new_team_list[0]
   new_team = None
   if len(new_team_list) == 2:
