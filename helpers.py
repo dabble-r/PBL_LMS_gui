@@ -159,37 +159,48 @@ def set_stat(method, val):
     print(f'Error: {e}')
 
 # update existing player
-def update_player(league):
+def update_player(league, update_raw):
   # print('update player\n')
   # flag to break out of Player Update Menu
+  ret = None
   update_flag = True
   # player to be updated
   player_to_update = player_state()
   if is_None(player_to_update):
-    player_raw = input('Enter the player name and team in a comma separated list: ')
-    player_data = player_raw.split(',')
+    #player_raw = input('Enter the player name and team in a comma separated list: ')
+    ret = 'Enter the player name and team in a comma separated list'
+    return ret
+  else:
+    player_data = update_raw.split(',')
     if not input_len(player_data, 2):
-      input_error(player_data, 2)
-      player_raw = input('Enter the player name and team in a comma separated list: ')
-    name = player_data[0].strip()
-    team = player_data[1].strip()
-    find_team = league.find_team(team)
-    if find_team == None:
-      not_found(team)
-      print('Available Teams:\n',league)
-      player_raw = input('Enter the player name and team in a comma separated list: ')
+      #input_error(player_data, 2)
+      #player_raw = input('Enter the player name and team in a comma separated list: ')
+      ret = 'Enter the player name and team in a comma separated list'
+      return ret
     else:
-      find_player = find_team.get_player(name)
-      if find_player == None:
-        not_found(name)
-        player_raw = input('Enter the player name and team in a comma separated list: ')
+      name = player_data[0].strip()
+      team = player_data[1].strip()
+      find_team = league.find_team(team)
+      if find_team == None:
+        #not_found(team)
+        #print('Available Teams:\n',league)
+        #player_raw = input('Enter the player name and team in a comma separated list: ')
+        ret = 'Enter the player name and team in a comma separated list'
+        return ret
       else:
-        # reassign player state, if find_player exists (not None)
-        player_to_update = player_state(find_player)
-        #print(f'Updating {find_player.name}')
-        #find_player.set_at_bat(at_bats, flag_val)
-        #find_player.set_AVG()
-        #show_AVG()
+        find_player = find_team.get_player(name)
+        if find_player == None:
+          #not_found(name)
+          #player_raw = input('Enter the player name and team in a comma separated list: ')
+          ret = 'Enter the player name and team in a comma separated list'
+          return ret
+        else:
+          # reassign player state, if find_player exists (not None)
+          player_to_update = player_state(find_player)
+          #print(f'Updating {find_player.name}')
+          #find_player.set_at_bat(at_bats, flag_val)
+          #find_player.set_AVG()
+          #show_AVG()
   user_action_2 = menus.select_option(2)(player_to_update)
   #stack.append(user_action_2)
   #print(stack)
@@ -635,9 +646,12 @@ def remove_player(league):
 # create new player
 def create_player(league, player_raw):    
   #new_player_raw = input('Enter new player name, number, team, and positions played separated by a comma: ')  
+  ret = None
   new_player_data = player_raw.split(',')
   if len(new_player_data) < 4:
     print('Enter name, number, team, and at least one position')
+    ret = 'Enter name, number, team, and at least one position'
+    return ret
     #new_player_raw = input('Enter new player name, number, team, and positions played separated by a comma: ') 
     #flag_action = input('Would you like to perform another action? y/n ').lower().strip() == 'y'
   else:
@@ -650,18 +664,22 @@ def create_player(league, player_raw):
     find_team = league.find_team(team)
     #print('find team', find_team.team)
     if is_None(find_team):
-      not_found(team)
-      print('Available Teams:\n',league)
-      new_player_raw = input('Enter new player name, number, team, and positions played separated by a comma: ') 
+      ret = f'Team {team} not found'
+      return ret
+      #not_found(team)
+      #print('Available Teams:\n',league)
+      #new_player_raw = input('Enter new player name, number, team, and positions played separated by a comma: ') 
       #flag_action = input('Would you like to perform another action? y/n ').lower().strip() == 'y'
     elif find_team:
-      print(f'Creating player:\n {name}\n {number}\n {team}\n {positions}')
+      #print(f'Creating player:\n {name}\n {number}\n {team}\n {positions}')
       find_team.add_player(name, number, team, positions)
+      ret = [name, number, team, positions]
       #print('raw', new_player_raw)
       #print('split', new_player)
       #print(name, number, positions)
       #print('new player', new_player)
       #print('team', find_team)
+      return ret
 
 # view all team in league
 def view_all(league):
@@ -684,7 +702,7 @@ def create_team(league, team_raw):
     new_team = Team(name)
   league.add_team(new_team)
   print(f'Creating {new_team}')
-  print(league)
+  print(league.COUNT)
 
 # remove one team in league
 def remove_team(league):
