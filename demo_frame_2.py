@@ -12,6 +12,7 @@ class LeagueView():
     self.leaderboard = []
     
     # define leage view - leading players
+    tk.Label(self.frame, text='Leaderboard', padx=2, pady=2).pack()
     self.tree = ttk.Treeview(self.frame, columns=('Player', 'Team', 'AVG'), show='headings')
     
     # display heading names
@@ -31,17 +32,27 @@ class LeagueView():
     # player arg should have name, team, batting avg 
     #print(player, type(player))
     #print('name attr', player.name)
-    num = random.randint(100, 400)
+    num = random.randint(100, 400) / 1000
     name = player.name
     team = player.team
     avg = num
-    self.tree.insert('', tk.END, values=(name, team, avg))
-    self.sort_leaderboard()
+    self.leaderboard.append((name, team, avg))
+    #print(self.leaderboard)
+    self.leaderboard.sort(reverse=True, key=self.my_sort)
+    self.clear_tree()
+    for el in self.leaderboard:
+      #print(el)
+      self.tree.insert('', tk.END, values=(el[0], el[1], el[2]))
   
-  def sort_leaderboard(self):
-    items = self.tree.get_children()
-    all_values = [self.tree.item(item)["values"][2] for item in items]  # Extract values
-    print("All Values:", all_values)
+  # clear all tree vals for new sorted leaderboard  
+  def clear_tree(self):
+    for el in self.tree.get_children():
+      self.tree.delete(el)
+
+  # helper to access avg val on player tuple - sort in descending order
+  def my_sort(self, player):
+    return player[2]
+    
 
 class BaseballApp():
   # initialize
@@ -67,7 +78,7 @@ class BaseballApp():
     self.player_frame = tk.Frame(root, padx=10, pady=10)
     self.player_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
-    tk.Label(self.player_frame, text="Player Name:").grid(row=0, column=0)
+    tk.Label(self.player_frame, text="Player Name:\n(Name, Number, Positions)").grid(row=0, column=0)
     self.player_entry = tk.Entry(self.player_frame)
     self.player_entry.grid(row=0, column=1)
     
@@ -77,7 +88,7 @@ class BaseballApp():
     self.team_dropdown = ttk.Combobox(self.player_frame, textvariable=self.team_select)
     self.team_dropdown.grid(row=1, column=1)
     
-    tk.Button(self.player_frame, text="Add Player", command=self.add_player).grid(row=2, column=1)
+    tk.Button(self.player_frame, text="Add Player)", command=self.add_player).grid(row=2, column=1)
 
     self.player_tree = ttk.Treeview(self.player_frame, columns=("Player", "Team"), show="headings")
     self.player_tree.heading("Player", text="Player Name")
@@ -101,7 +112,6 @@ class BaseballApp():
   def add_player(self):
     player = self.player_entry.get()
     team = self.team_select.get()
-    avg = .375
     # print(team)
     if player:
       # print('new player', player)
@@ -117,12 +127,16 @@ class BaseballApp():
   # add player to team roster
   def add_player_team(self, new_player, team):
     find_team = self.league.find_team(team)
-    find_team.add_player(new_player)
-    # print('player', new_player.name)
-    # print('team', find_team.name)
-    self.player_tree.insert("", tk.END, values=(new_player.name, find_team.name))
-    print('league', self.league)
-    print('players', self.league.view_all())
+    try:
+      find_team.add_player(new_player)
+      # print('player', new_player.name)
+      # print('team', find_team.name)
+      self.player_tree.insert("", tk.END, values=(new_player.name, find_team.name))
+      print('league', self.league)
+      print('players', self.league.view_all())
+    except Exception as e:
+      print(f'Error: {e}')
+      return
 
 
 if __name__ == "__main__":
