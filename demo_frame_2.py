@@ -67,8 +67,10 @@ class BaseballApp():
     self.team_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
     tk.Label(self.team_frame, text="Team Name:").grid(row=0, column=0)
+
     self.team_entry = tk.Entry(self.team_frame)
     self.team_entry.grid(row=0, column=1)
+
     tk.Button(self.team_frame, text="Add Team", command=self.add_team).grid(row=0, column=2)
 
     self.team_listbox = tk.Listbox(self.team_frame, height=10, justify='center')
@@ -79,6 +81,7 @@ class BaseballApp():
     self.player_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
     tk.Label(self.player_frame, text="Player Name:\n(Name, Number, Positions)").grid(row=0, column=0)
+
     self.player_entry = tk.Entry(self.player_frame)
     self.player_entry.grid(row=0, column=1)
     
@@ -94,6 +97,27 @@ class BaseballApp():
     self.player_tree.heading("Player", text="Player Name")
     self.player_tree.heading("Team", text="Team")
     self.player_tree.grid(row=3, column=0, columnspan=2)
+
+    # Player update frame
+    options = ['at_bats', 'hits', 'walks']
+    self.update_frame = tk.Frame(root, padx=10, pady=10)
+    self.update_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+
+    tk.Label(self.update_frame, text="Update Player:").grid(row=0, column=1)
+
+    self.update_entry = tk.Entry(self.update_frame)
+    self.update_entry.grid(row=0, column=2)
+
+    self.selected = tk.StringVar()
+    self.selected.set('at_bats')
+
+    # populate radio buttons
+    row = 1
+    for el in options:
+      tk.Radiobutton(self.update_frame, text=el, textvariable=self.selected, value=el).grid(row=row, column=1)
+      row += 1
+      
+    #self.update_stat.grid(row=1, column=1)
 
   # add team function 
   def add_team(self):
@@ -137,7 +161,6 @@ class BaseballApp():
     except Exception as e:
       print(f'Error: {e}')
       return
-
 
 if __name__ == "__main__":
   root = tk.Tk()
