@@ -27,9 +27,13 @@ class Player():
     return ret
   
   def format_player(self, raw_lst):
-    name, number, team = raw_lst [:3]
+    team = raw_lst[0]
+    name, number = raw_lst [1::2]
     positions = raw_lst[3:]
-    #print(positions)
+    #print(raw_lst)
+    #print('team', team)
+    #print('name', name)
+    #print('number', number)
     new_player = Player(name, number, team, positions)
     return new_player
 

@@ -32,9 +32,11 @@ class BaseballApp():
     self.player_entry.grid(row=0, column=1)
     
     tk.Label(self.player_frame, text="Team:").grid(row=1, column=0)
-    self.team_dropdown = ttk.Combobox(self.player_frame)
-    self.team_dropdown.grid(row=1, column=1)
 
+    self.team_select = tk.StringVar()
+    self.team_dropdown = ttk.Combobox(self.player_frame, textvariable=self.team_select)
+    self.team_dropdown.grid(row=1, column=1)
+    
     tk.Button(self.player_frame, text="Add Player", command=self.add_player).grid(row=2, column=1)
 
     self.player_tree = ttk.Treeview(self.player_frame, columns=("Player", "Team"), show="headings")
@@ -58,13 +60,17 @@ class BaseballApp():
   # add player function
   def add_player(self):
     player = self.player_entry.get()
+    team = self.team_select.get()
+    # print(team)
     if player:
       # print('new player', player)
       raw_lst = list(map(lambda x: x.strip(), player.split(',')))
+      raw_lst.insert(0, team)
+      #print(raw_lst)
       new_player = Player.format_player(self, raw_lst)
+      self.add_player_team(new_player, team)
       print('new player', new_player)
       team = self.team_dropdown.get()
-      self.add_player_team(new_player, team)
     self.player_entry.delete(0, tk.END)
   
   # add player to team roster
