@@ -99,7 +99,8 @@ class BaseballApp():
     self.player_tree.grid(row=3, column=0, columnspan=2)
 
     # Player update frame
-    options = ['at_bats', 'hits', 'walks']
+    options = ['at_bats', 'hits', 'walks', 'SO', 'HR', 'RBI', 'runs', 'singles', 'doubles', 'triples', 'sac_fly']
+
     self.update_frame = tk.Frame(root, padx=10, pady=10)
     self.update_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
@@ -114,10 +115,10 @@ class BaseballApp():
     # populate radio buttons
     row = 1
     for el in options:
-      tk.Radiobutton(self.update_frame, text=el, textvariable=self.selected, value=el).grid(row=row, column=1)
+      tmp = el
+      tk.Radiobutton(self.update_frame, text=tmp, textvariable=el, value=el).grid(row=row, column=1, sticky='w')
+      tmp = None
       row += 1
-      
-    #self.update_stat.grid(row=1, column=1)
 
   # add team function 
   def add_team(self):
