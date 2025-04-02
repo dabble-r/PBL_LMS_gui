@@ -3,12 +3,52 @@ from tkinter import ttk, messagebox
 from linked_list import LinkedList
 from team import Team
 from player import Player
+import random
+
+class LeagueView():
+  def __init__(self, parent):
+    self.frame = tk.Frame(parent)
+    self.frame.pack()
+    self.leaderboard = []
+    
+    # define leage view - leading players
+    self.tree = ttk.Treeview(self.frame, columns=('Player', 'Team', 'AVG'), show='headings')
+    
+    # display heading names
+    self.tree.heading('Player', text='Player')
+    self.tree.heading('Team', text='Team')
+    self.tree.heading('AVG', text='AVG')
+
+    # Define Column Widths
+    self.tree.column("Player", width=150)
+    self.tree.column("Team", width=150)
+    self.tree.column("AVG", width=75, anchor="center")
+
+    self.tree.pack()
+
+  # add player to leaderboard 
+  def add_leaderboard(self, player):
+    # player arg should have name, team, batting avg 
+    #print(player, type(player))
+    #print('name attr', player.name)
+    num = random.randint(100, 400)
+    name = player.name
+    team = player.team
+    avg = num
+    self.tree.insert('', tk.END, values=(name, team, avg))
+    self.sort_leaderboard()
+  
+  def sort_leaderboard(self):
+    items = self.tree.get_children()
+    all_values = [self.tree.item(item)["values"][2] for item in items]  # Extract values
+    print("All Values:", all_values)
 
 class BaseballApp():
   # initialize
-  def __init__(self, root, league=None):
+  def __init__(self, root, app, league=None):
     self.root = root
     self.root.title = 'PBL'
+    self.app = app
     self.league = league 
 
     # Team Management Frame
@@ -20,7 +60,7 @@ class BaseballApp():
     self.team_entry.grid(row=0, column=1)
     tk.Button(self.team_frame, text="Add Team", command=self.add_team).grid(row=0, column=2)
 
-    self.team_listbox = tk.Listbox(self.team_frame, height=10)
+    self.team_listbox = tk.Listbox(self.team_frame, height=10, justify='center')
     self.team_listbox.grid(row=1, column=0, columnspan=3)
 
     # Player Management Frame
@@ -61,6 +101,7 @@ class BaseballApp():
   def add_player(self):
     player = self.player_entry.get()
     team = self.team_select.get()
+    avg = .375
     # print(team)
     if player:
       # print('new player', player)
@@ -69,8 +110,8 @@ class BaseballApp():
       #print(raw_lst)
       new_player = Player.format_player(self, raw_lst)
       self.add_player_team(new_player, team)
+      self.app.add_leaderboard(new_player)
       print('new player', new_player)
-      team = self.team_dropdown.get()
     self.player_entry.delete(0, tk.END)
   
   # add player to team roster
@@ -83,10 +124,12 @@ class BaseballApp():
     print('league', self.league)
     print('players', self.league.view_all())
 
+
 if __name__ == "__main__":
   root = tk.Tk()
   PBL = LinkedList('PBL')
-  app = BaseballApp(root, PBL)
+  league_view = LeagueView(root)
+  app = BaseballApp(root, league_view, PBL)
   root.mainloop()
 
 

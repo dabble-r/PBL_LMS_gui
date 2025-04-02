@@ -28,7 +28,8 @@ class Player():
   
   def format_player(self, raw_lst):
     team = raw_lst[0]
-    name, number = raw_lst [1::2]
+    name = raw_lst[1]
+    number = raw_lst[2]
     positions = raw_lst[3:]
     #print(raw_lst)
     #print('team', team)
