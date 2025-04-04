@@ -4,12 +4,13 @@ from linked_list import LinkedList
 from team import Team
 from player import Player
 import random
+from bisect import bisect_left, bisect_right, insort
 
 class LeagueView():
-  def __init__(self, parent):
+  def __init__(self, parent, leaderboard=[]):
     self.frame = tk.Frame(parent)
     self.frame.pack()
-    self.leaderboard = []
+    self.leaderboard = leaderboard
     
     # define leage view - leading players
     tk.Label(self.frame, text='Leaderboard', padx=2, pady=2).pack()
@@ -36,9 +37,8 @@ class LeagueView():
     name = player.name
     team = player.team
     avg = num
-    self.leaderboard.append((name, team, avg))
-    #print(self.leaderboard)
-    self.leaderboard.sort(reverse=True, key=self.my_sort)
+    indx = self.insort_leaderboard(avg)
+    self.leaderboard.insert(indx, (name, team, avg))
     self.clear_tree()
     for el in self.leaderboard:
       #print(el)
@@ -49,10 +49,11 @@ class LeagueView():
     for el in self.tree.get_children():
       self.tree.delete(el)
 
-  # helper to access avg val on player tuple - sort in descending order
-  def my_sort(self, player):
-    return player[2]
-    
+  # insort - sort in leaderbaord
+  def insort_leaderboard(self, new_avg):
+    avgs = [x[2] for x in self.leaderboard]
+    indx = bisect_right(avgs, new_avg)
+    return indx
 
 class BaseballApp():
   # initialize
