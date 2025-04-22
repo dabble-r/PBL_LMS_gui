@@ -3,6 +3,7 @@ from tkinter import ttk, messagebox
 from linked_list import LinkedList
 from team import Team
 from player import Player
+from helpers import update_player
 import random
 from bisect import bisect_left, bisect_right, insort
 
@@ -36,10 +37,8 @@ class LeagueView():
     num = random.randint(100, 400) / 1000
     name = player.name
     team = player.team
-    avg = num
-    indx = self.insort_leaderboard(avg)
-    self.leaderboard.insert(indx, (name, team, avg))
-    self.clear_tree()
+    avg = "{:.3f}".format(num)
+    self.update_leaderboard(name, team, avg)
     for el in self.leaderboard:
       #print(el)
       self.tree.insert('', tk.END, values=(el[0], el[1], el[2]))
@@ -49,11 +48,17 @@ class LeagueView():
     for el in self.tree.get_children():
       self.tree.delete(el)
 
-  # insort - sort in leaderbaord
+  # insort - sort avgs in leaderbaord, find indx of new avg
   def insort_leaderboard(self, new_avg):
     avgs = [x[2] for x in self.leaderboard]
     indx = bisect_right(avgs, new_avg)
     return indx
+  
+  # insert_leaderbaord
+  def update_leaderboard(self, name, team, avg):
+    indx = self.insort_leaderboard(avg)
+    self.leaderboard.insert(indx, (name, team, avg))
+    self.clear_tree()
 
 class BaseballApp():
   # initialize
@@ -107,17 +112,23 @@ class BaseballApp():
 
     tk.Label(self.update_frame, text="Update Player:").grid(row=0, column=1)
 
-    self.update_entry = tk.Entry(self.update_frame)
-    self.update_entry.grid(row=0, column=2)
+    self.update_name = tk.Entry(self.update_frame)
+    self.update_name.grid(row=0, column=2)
 
-    self.selected = tk.StringVar()
-    self.selected.set('at_bats')
+    tk.Label(self.update_frame, text="Stat:").grid(row=1, column=1)
+
+    self.update_val = tk.Entry(self.update_frame)
+    self.update_val.grid(row=1, column=2)
+
+    self.selected = tk.StringVar(value='at bat')
+
+    tk.Button(self.update_frame, text='Update', command=self.update_stat).grid(row=2, column=2)
 
     # populate radio buttons
-    row = 1
+    row = 2
     for el in options:
       tmp = el
-      tk.Radiobutton(self.update_frame, text=tmp, textvariable=el, value=el).grid(row=row, column=1, sticky='w')
+      tk.Radiobutton(self.update_frame, text=tmp, textvariable=tmp, value=tmp, variable=self.selected, command=self.selected_option).grid(row=row, column=1, sticky='w')
       tmp = None
       row += 1
 
@@ -149,6 +160,24 @@ class BaseballApp():
       self.app.add_leaderboard(new_player)
       print('new player', new_player)
     self.player_entry.delete(0, tk.END)
+
+  # update player stat
+  def update_stat(self):
+    stat = self.selected_option()
+    player = self.update_name.get()
+    team = self.team_dropdown.get()
+    val = self.update_val.get()
+    print(team, player, stat, val)
+    ret = f'{player}, {team}'
+    update_player(self.league, ret)
+    #find_team = self.league.find_team(team)
+    #find_player = find_team.get_player(player)
+    #print(find_team)
+    #print(find_player)
+
+  def selected_option(self):
+    print(self.selected.get())
+    return self.selected.get()
   
   # add player to team roster
   def add_player_team(self, new_player, team):

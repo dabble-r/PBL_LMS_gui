@@ -197,7 +197,7 @@ def update_player(league, update_raw):
         else:
           # reassign player state, if find_player exists (not None)
           player_to_update = player_state(find_player)
-          #print(f'Updating {find_player.name}')
+          print(f'Updating {find_player.name}')
           #find_player.set_at_bat(at_bats, flag_val)
           #find_player.set_AVG()
           #show_AVG()
