@@ -39,8 +39,9 @@ class LeagueView():
     team = player.team
     #avg = "{:.3f}".format(num)
     self.update_leaderboard(name, team, avg)
-    for el in self.leaderboard:
+    for i in range(len(self.leaderboard)-1,-1,-1):
       #print(el)
+      el = self.leaderboard[i]
       self.tree.insert('', tk.END, values=(el[0], el[1], el[2]))
   
   # clear all tree vals for new sorted leaderboard  
@@ -165,23 +166,23 @@ class BaseballApp():
   # update player stat
   def update_stat(self):
     stat = self.selected_option()
-    name = self.update_name.get()
+    name = self.update_name.get().strip()
     team = self.team_dropdown.get()
     val = self.update_val.get()
     ret_stat = f'{name}, {team}'
     print(team, name, stat, val)
 
-    find_team = self.league.find_team(team)
-    find_player = find_team.get_player(name)
-
     ret_board = update_player(self.league, ret_stat, stat, val)
-    self.app.add_leaderboard(ret_board)
-
-    #find_team = self.league.find_team(team)
-    #find_player = find_team.get_player(player)
-    #print(find_team)
-    #print(find_player)
-
+   
+    for indx, el in enumerate(self.app.leaderboard):
+      if el[0] == name:
+        self.app.leaderboard.pop(indx)
+        self.app.update_leaderboard(name, team, float(ret_board.AVG))
+        for i in range(len(self.app.leaderboard)-1,-1,-1):
+          #print(el)
+          el = self.app.leaderboard[i]
+          self.app.tree.insert('', tk.END, values=(el[0], el[1], el[2]))
+        
   def selected_option(self):
     print(self.selected.get())
     return self.selected.get()
