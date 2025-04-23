@@ -152,6 +152,7 @@ def update_stat(update_player):
       print('callable', method)
       set_stat(method, int(val))
 
+# 
 def set_stat(method, val):
   try:
     method(val)
@@ -159,469 +160,69 @@ def set_stat(method, val):
     print(f'Error: {e}')
 
 # update existing player
-def update_player(league, update_raw):
-  # print('update player\n')
-  # flag to break out of Player Update Menu
-  ret = None
-  update_flag = True
-  # player to be updated
-  player_to_update = player_state()
-  if is_None(player_to_update):
-    #player_raw = input('Enter the player name and team in a comma separated list: ')
-    ret = 'Enter the player name and team in a comma separated list'
-    return ret
-  else:
-    player_data = update_raw.split(',')
-    if not input_len(player_data, 2):
-      #input_error(player_data, 2)
-      #player_raw = input('Enter the player name and team in a comma separated list: ')
-      ret = 'Enter the player name and team in a comma separated list'
-      return ret
-    else:
-      name = player_data[0].strip()
-      team = player_data[1].strip()
-      find_team = league.find_team(team)
-      if find_team == None:
-        #not_found(team)
-        #print('Available Teams:\n',league)
-        #player_raw = input('Enter the player name and team in a comma separated list: ')
-        ret = 'Enter the player name and team in a comma separated list'
-        return ret
-      else:
-        find_player = find_team.get_player(name)
-        if find_player == None:
-          #not_found(name)
-          #player_raw = input('Enter the player name and team in a comma separated list: ')
-          ret = 'Enter the player name and team in a comma separated list'
-          return ret
-        else:
-          # reassign player state, if find_player exists (not None)
-          player_to_update = player_state(find_player)
-          print(f'Updating {find_player.name}')
-          #find_player.set_at_bat(at_bats, flag_val)
-          #find_player.set_AVG()
-          #show_AVG()
-  user_action_2 = menus.select_option(2)(player_to_update)
-  #stack.append(user_action_2)
-  #print(stack)
-  #print('action 2', user_action_2)
-  while update_flag:
-    flag_val = True
-    match user_action_2:
-      case '1':
-        # print('flag val', flag_val)
-        # print(player_to_update)
-        # print('Update offense\n')
-        # flag val for suer stat update
-        # flag default is True. stat value update default is to add val to curr state
-        # flag = False, stat value replaces curr state
-        user_action_3 = menus.select_option(3)(player_to_update)
-        #stack.append(user_action_3)
-        #print('action 3', user_action_3)
-        match user_action_3:
-          case '1':
-            # print(player_to_update)
-            # print('at bats\n')
-            # check if user wants to add or reassign stat value
-            # if user choice = 'add', func returns True
-            user_action_val = user_add_re()
-            if user_action_val == False:
-              flag_val = False
-            at_bats_raw = input('Enter value for at bat: ').strip()
-            at_bats_data = int(at_bats_raw)
-            player_to_update.set_at_bat(at_bats_data, flag_val)
-            player_to_update.set_AVG()
-            update_stat(player_to_update)
-            '''
-            #player_raw = input('Enter the player name, team, and at-bats to update in a comma separated list: ')
-            #player_data = player_raw.split(',')
-            #if not input_len(player_data, 3):
-              #input_error(player_data, 3)
-            #else:
-              #name = player_data[0].strip()
-              #team = player_data[1].strip()
-            #find_team = league.find_team(team)
-            # print(find_team)
-            #if find_team == None:
-              #not_found(team)
-            #else:
-              #find_player = find_team.get_player(name)
-              #if find_player == None:
-                #not_found(name)
-              #else:
-                # reassign player state, if find_player exists (not None)
-                #player_to_update = player_state(player_to_update, find_player)
-                #print(f'Updating {find_player.name}')
-                #find_player.set_at_bat(at_bats, flag_val)
-                #find_player.set_AVG()
-                #show_AVG()
-            '''
-          case '2':
-            # print(player_to_update)
-            #print('flag val', flag_val)
-            # print('hits\n')
-            user_action_val = user_add_re()
-            if user_action_val == False:
-              flag_val = False
-            hits_raw = input('Enter the hits to update: ').strip()
-            hits_data = int(hits_raw)
-            player_to_update.set_hit(hits_data, flag_val)
-            player_to_update.set_AVG()
-            # show_AVG()  
-          case '3':
-            # print('walks\n')
-            # print(player_to_update)
-            user_action_val = user_add_re()
-            if user_action_val == False:
-              flag_val = False
-            walks_raw = input('Enter the walks to update: ').strip()
-            walks_data = int(walks_raw)
-            player_to_update.set_bb(walks_data, flag_val)
-            player_to_update.set_AVG()
-            '''
-            # show_AVG() 
-            #user_action_val = user_add_re()
-            #if user_action_val == False:
-              #flag_val = False
-            #player_raw = input('Enter the player name and walks to update in a comma separated list: ')
-            #player_data = player_raw.split(',')
-            #if not input_len(player_data, 3):
-              #input_error(player_data, 3)
-            #else:
-              #name = player_data[0].strip()
-              #team = player_data[1].strip()
-              #bb = int(player_data[2].strip())
-              #find_team = league.find_team(team)
-              # print(find_team)
-              #if is_None(find_team):
-                #not_found(team)
-              #else:
-                #find_player = find_team.get_player(name)
-                #if is_None(find_player):
-                  #not_found(name)
-                #else:
-                  #print(f'Updating {find_player.name}')
-                  #find_player.set_bb(bb)
-                  #find_player.set_AVG()
-                  # show_AVG()
-            '''
-          case '4':
-            # print('SO\n')
-            # print(player_to_update)
-            user_action_val = user_add_re()
-            if user_action_val == False:
-              flag_val = False
-            so_raw = input('Enter the So\'s to update: ').strip()
-            so_data = int(so_raw)
-            player_to_update.set_so(so_data, flag_val)
-            player_to_update.set_AVG()
-            '''
-            user_action_val = user_add_re()
-            if user_action_val == False:
-              flag_val = False
-            player_raw = input('Enter the player name and SO\'s to update in a comma separated list: ')
-            player_data = player_raw.split(',')
-            if not input_len(player_data, 3):
-              input_error(player_data, 3)
-            else:
-              name = player_data[0].strip()
-              team = player_data[1].strip()
-              so = int(player_data[2].strip())
-              find_team = league.find_team(team)
-              # print(find_team)
-              if is_None(find_team):
-                not_found(team)
-              else:
-                find_player = find_team.get_player(name)
-                if is_None(find_player):
-                  not_found(name)
-                else:
-                  print(f'Updating {find_player.name}')
-                  find_player.set_so(so)
-                  find_player.set_AVG()
-                  # show_AVG()
-            '''
-          case '5':
-            # print('HR\n')
-            # print(player_to_update)
-            user_action_val = user_add_re()
-            if user_action_val == False:
-              flag_val = False
-            hr_raw = input('Enter the HR\'s to update: ').strip()
-            hr_data = int(hr_raw)
-            player_to_update.set_hr(hr_data, flag_val)
-            player_to_update.set_AVG()
-            '''
-            user_action_val = user_add_re()
-            if user_action_val == False:
-              flag_val = False
-            player_raw = input('Enter the player name and HR\'s to update in a comma separated list: ')
-            player_data = player_raw.split(',')
-            if not input_len(player_data, 3):
-              input_error(player_data, 3)
-            else:
-              name = player_data[0].strip()
-              team = player_data[1].strip()
-              hr = int(player_data[2].strip())
-              find_team = league.find_team(team)
-              # print(find_team)
-              if is_None(find_team):
-                not_found(team)
-              else:
-                find_player = find_team.get_player(name)
-                if is_None(find_player):
-                  not_found(name)
-                else:
-                  print(f'Updating {find_player.name}')
-                  find_player.set_hr(hr)
-                  find_player.set_AVG()
-                  # show_AVG()
-            '''
-          case '6':
-            # print('rbi\n')
-            # print(player_to_update)
-            user_action_val = user_add_re()
-            if user_action_val == False:
-              flag_val = False
-            rbi_raw = input('Enter the RBI\'s to update: ').strip()
-            rbi_data = int(rbi_raw)
-            player_to_update.set_rbi(rbi_data, flag_val)
-            player_to_update.set_AVG()
-            '''
-            user_action_val = user_add_re()
-            if user_action_val == False:
-              flag_val = False
-            player_raw = input('Enter the player name and RBI\'s to update in a comma separated list: ')
-            player_data = player_raw.split(',')
-            if not input_len(player_data, 3):
-              input_error(player_data, 3)
-            else:
-              name = player_data[0].strip()
-              team = player_data[1].strip()
-              rbi = int(player_data[2].strip())
-              find_team = league.find_team(team)
-              # print(find_team)
-              if is_None(find_team):
-                not_found(team)
-              else:
-                find_player = find_team.get_player(name)
-                if is_None(find_player):
-                  not_found(name)
-                else:
-                  print(f'Updating {find_player.name}')
-                  find_player.set_rbi(rbi)
-                  find_player.set_AVG()
-                  # show_AVG()
-            '''
-          case '7':
-            # print('runs'\n)
-            # print(player_to_update)
-            user_action_val = user_add_re()
-            if user_action_val == False:
-              flag_val = False
-            rbi_raw = input('Enter the RBI\'s to update: ').strip()
-            rbi_data = int(rbi_raw)
-            player_to_update.set_rbi(rbi_data, flag_val)
-            player_to_update.set_AVG()
-            '''
-            user_action_val = user_add_re()
-            if user_action_val == False:
-              flag_val = False
-            player_raw = input('Enter the player name and runs\'s to update in a comma separated list: ')
-            player_data = player_raw.split(',')
-            if not input_len(player_data, 3):
-              input_error(player_data, 3)
-            else:
-              name = player_data[0].strip()
-              team = player_data[1].strip()
-              runs = int(player_data[2].strip())
-              find_team = league.find_team(team)
-              # print(find_team)
-              if is_None(find_team):
-                not_found(team)
-              else:
-                find_player = find_team.get_player(name)
-                if is_None(find_player):
-                  not_found(name)
-                else:
-                  print(f'Updating {find_player.name}')
-                  find_player.set_runs(runs)
-                  find_player.set_AVG()
-                  # show_AVG()
-            '''
-          case '8':
-            # print('singles\n')
-            # print(player_to_update)
-            user_action_val = user_add_re()
-            if user_action_val == False:
-              flag_val = False
-            singles_raw = input('Enter the singles\'s to update: ').strip()
-            singles_data = int(singles_raw)
-            player_to_update.set_singles(singles_data, flag_val)
-            player_to_update.set_AVG()
-            '''
-            user_action_val = user_add_re()
-            if user_action_val == False:
-              flag_val = False
-            player_raw = input('Enter the player name and RBI\'s to update in a comma separated list: ')
-            player_data = player_raw.split(',')
-            if not input_len(player_data, 3):
-              input_error(player_data, 3)
-            else:
-              name = player_data[0].strip()
-              team = player_data[1].strip()
-              singles = int(player_data[2].strip())
-              find_team = league.find_team(team)
-              # print(find_team)
-              if is_None(find_team):
-                not_found(team)
-              else:
-                find_player = find_team.get_player(name)
-                if is_None(find_player):
-                  not_found(name)
-                else:
-                  print(f'Updating {find_player.name}')
-                  find_player.set_singles(singles)
-                  find_player.set_AVG()
-                  # show_AVG()
-            '''
-          case '9':
-            # print('doubles\n')
-            # print(player_to_update)
-            user_action_val = user_add_re()
-            if user_action_val == False:
-              flag_val = False
-            doubles_raw = input('Enter the doubles\'s to update: ').strip()
-            doubles_data = int(doubles_raw)
-            player_to_update.set_doubles(doubles_data, flag_val)
-            player_to_update.set_AVG()
-            '''
-            user_action_val = user_add_re()
-            if user_action_val == False:
-              flag_val = False
-            player_raw = input('Enter the player name and RBI\'s to update in a comma separated list: ')
-            player_data = player_raw.split(',')
-            if not input_len(player_data, 3):
-              input_error(player_data, 3)
-            else:
-              name = player_data[0].strip()
-              team = player_data[1].strip()
-              doubles = int(player_data[2].strip())
-              find_team = league.find_team(team)
-              # print(find_team)
-              if is_None(find_team):
-                not_found(team)
-              else:
-                find_player = find_team.get_player(name)
-                if is_None(find_player):
-                  not_found(name)
-                else:
-                  print(f'Updating {find_player.name}')
-                  find_player.set_doubles(doubles)
-                  find_player.set_AVG()
-                  # show_AVG()
-            '''
-          case '10':
-            # print('triples\n')
-            # print(player_to_update)
-            user_action_val = user_add_re()
-            if user_action_val == False:
-              flag_val = False
-            triples_raw = input('Enter the triples\'s to update: ').strip()
-            triples_data = int(triples_raw)
-            player_to_update.set_triples(triples_data, flag_val)
-            player_to_update.set_AVG()
-            '''
-            user_action_val = user_add_re()
-            if user_action_val == False:
-              flag_val = False
-            player_raw = input('Enter the player name and RBI\'s to update in a comma separated list: ')
-            player_data = player_raw.split(',')
-            if not input_len(player_data, 3):
-              input_error(player_data, 3)
-            else:
-              name = player_data[0].strip()
-              team = player_data[1].strip()
-              triples = int(player_data[2].strip())
-              find_team = league.find_team(team)
-              # print(find_team)
-              if is_None(find_team):
-                not_found(team)
-              else:
-                find_player = find_team.get_player(name)
-                if is_None(find_player):
-                  not_found(name)
-                else:
-                  print(f'Updating {find_player.name}')
-                  find_player.set_triples(triples)
-                  find_player.set_AVG()
-                  # show_AVG()
-            '''
-          case '11':
-            # print('sac fly\n')
-            # print(player_to_update)
-            user_action_val = user_add_re()
-            if user_action_val == False:
-              flag_val = False
-            sac_fly_raw = input('Enter the sac_flies to update: ').strip()
-            sac_fly_data = int(sac_fly_raw)
-            player_to_update.set_sac_fly(sac_fly_data, flag_val)
-            player_to_update.set_AVG()
-            '''
-            user_action_val = user_add_re()
-            if user_action_val == False:
-              flag_val = False
-            player_raw = input('Enter the player name and RBI\'s to update in a comma separated list: ')
-            player_data = player_raw.split(',')
-            if not input_len(player_data, 3):
-              input_error(player_data, 3)
-            else:
-              name = player_data[0].strip()
-              team = player_data[1].strip()
-              sac_fly = int(player_data[2].strip())
-              find_team = league.find_team(team)
-              # print(find_team)
-              if is_None(find_team):
-                not_found(team)
-              else:
-                find_player = find_team.get_player(name)
-                if is_None(find_player):
-                  not_found(name)
-                else:
-                  print(f'Updating {find_player.name}')
-                  find_player.set_sac_fly(sac_fly)
-                  find_player.set_AVG()
-                  # show_AVG()
-            '''
-          case '12':
-            print('Quitting menu\n')
-            # print(player_to_update)
-            # print('return to last menu')
-            # update_flag = user_update_continue(update_flag, find_player)
-      case '2':
-        print('update defense')
-        # flag_action = input('Would you like to perform another action? y/n ').lower().strip() == 'y'
-      case '3':
-        print('Quitting menu\n')
-    update_flag = user_update_continue(update_flag, find_player)
-    #update_flag = input(f'Would you like to continue updating {find_player.name}?: y/n \n').lower().strip() == 'y'
-    '''
-    def remove_player(league):
-      #print('remove pl\n')
-      player_raw = input('Enter the player name and player team name to remove: ')
-      player_data = player_raw.split(',')
-      if not input_len(player_data, 2):
-        input_error(player_data, 2)
-      else:
-        name = player_data[0]
-        team = player_data[1].strip()   
-        find_team = league.find_team(team) 
-        find_team.remove_player(name)
-        #print(find_team)
-      else:
-        print('Must enter player name and team name')
-        flag_action = input('Would you like to perform another action? y/n ').lower().strip() == 'y'
-    '''
+def update_player(league, update_raw, stat, val):
+  player_data = update_raw.split(',')
+  name, team = player_data
+  find_team = league.find_team(team.strip())
+  find_player = find_team.get_player(name.strip())
+  print(f'Updating Player: {find_player}')
+  match stat:
+    case 'at_bats':
+      at_bats_int = int(val)
+      find_player.set_at_bat(at_bats_int)
+      find_player.set_AVG()
+      
+    case 'hits':
+      hits_int = int(val)
+      find_player.set_hit(hits_int)
+      find_player.set_AVG()
+       
+    case 'walks':
+      walks_int = int(val)
+      find_player.set_bb(walks_int)
+      find_player.set_AVG()
+
+    case 'SO':
+      so_int = int(val)
+      find_player.set_so(so_int)
+      find_player.set_AVG()
+
+    case 'HR':
+      hr_int = int(val)
+      find_player.set_hr(hr_int)
+      find_player.set_AVG()
+      
+    case 'RBI':
+      rbi_int = int(val)
+      find_player.set_rbi(rbi_int)
+      find_player.set_AVG()
+      
+    case 'runs':
+      runs_int = int(val)
+      find_player.set_runs(runs_int)
+      find_player.set_AVG()
+     
+    case 'singles':
+      singles_int = int(val)
+      find_player.set_singles(singles_int)
+      find_player.set_AVG()
+      
+    case 'doubles':
+      doubles_int = int(val)
+      find_player.set_doubles(doubles_int)
+      find_player.set_AVG()
+      
+    case 'triples':
+      triples_int = int(val)
+      find_player.set_triples(triples_int)
+      find_player.set_AVG()
+
+    case 'sac_fly':
+      sac_fly_int = int(val)
+      find_player.set_sac_fly(sac_fly_int)
+      find_player.set_AVG()
+  print(find_player) 
+  return find_player
 
 # remove exisiting player
 def remove_player(league):

@@ -34,10 +34,10 @@ class LeagueView():
     # player arg should have name, team, batting avg 
     #print(player, type(player))
     #print('name attr', player.name)
-    num = random.randint(100, 400) / 1000
+    avg = float(player.AVG)
     name = player.name
     team = player.team
-    avg = "{:.3f}".format(num)
+    #avg = "{:.3f}".format(num)
     self.update_leaderboard(name, team, avg)
     for el in self.leaderboard:
       #print(el)
@@ -156,6 +156,7 @@ class BaseballApp():
       raw_lst.insert(0, team)
       #print(raw_lst)
       new_player = Player.format_player(self, raw_lst)
+      #print('new player - avg', new_player.AVG)
       self.add_player_team(new_player, team)
       self.app.add_leaderboard(new_player)
       print('new player', new_player)
@@ -164,12 +165,18 @@ class BaseballApp():
   # update player stat
   def update_stat(self):
     stat = self.selected_option()
-    player = self.update_name.get()
+    name = self.update_name.get()
     team = self.team_dropdown.get()
     val = self.update_val.get()
-    print(team, player, stat, val)
-    ret = f'{player}, {team}'
-    update_player(self.league, ret)
+    ret_stat = f'{name}, {team}'
+    print(team, name, stat, val)
+
+    find_team = self.league.find_team(team)
+    find_player = find_team.get_player(name)
+
+    ret_board = update_player(self.league, ret_stat, stat, val)
+    self.app.add_leaderboard(ret_board)
+
     #find_team = self.league.find_team(team)
     #find_player = find_team.get_player(player)
     #print(find_team)
