@@ -166,9 +166,10 @@ def update_player(league, update_raw, stat, val):
   find_team = league.find_team(team.strip())
   find_player = find_team.get_player(name.strip())
   print(f'Updating Player: {find_player}')
+  print('update stat', stat)
   match stat:
     case 'at_bats':
-      at_bats_int = int(val)
+      at_bats_int = val
       find_player.set_at_bat(at_bats_int)
       find_player.set_AVG()
       
@@ -221,6 +222,7 @@ def update_player(league, update_raw, stat, val):
       sac_fly_int = int(val)
       find_player.set_sac_fly(sac_fly_int)
       find_player.set_AVG()
+
   print(find_player) 
   return find_player
 

@@ -41,60 +41,74 @@ class Player():
   def format_decimal(self, num):
     return "{:.3f}".format(num)
   
+  def less_zero(self, stat, val):
+    return stat + val < 0
+
   def set_at_bat(self, val):
+    if self.less_zero(self.at_bat, val):
+      self.at_bat = 0
+    else:
       self.at_bat += val
-  
-  def set_hit(self, val, flag=True):
-    if flag:
-      self.hit += val
+        
+  def set_hit(self, val):
+    if self.less_zero(self.hit, val):
+      self.hit = 0
     else:
-      self.hit = val
-    #print('at bat:',self.at_bat)
+      self.hit += val
   
-  def set_bb(self, val, flag=True):
-    if flag:
+  def set_bb(self, val):
+    if self.less_zero(self.bb, val):
+      self.bb = 0
+    else:
       self.bb += val
-    else:
-      self.bb = val
   
-  def set_so(self, val, flag=True):
-    if flag:
+  def set_so(self, val):
+    if self.less_zero(self.so, val):
+      self.so = 0
+    else:
       self.so += val
-    else:
-      self.so = val
   
-  def set_hr(self, val, flag=True):
-    if flag:
+  def set_hr(self, val):
+    if self.less_zero(self.hr, val):
+      self.hr = 0
+    else:
       self.hr += val
-    else:
-      self.hr = val
 
-  def set_rbi(self, val, flag=True):
-    if flag:
-      self.hit += val
+  def set_rbi(self, val):
+    if self.less_zero(self.rbi, val):
+      self.rbi = 0
     else:
-      self.hit = val
+      self.rbi += val
   
-  def set_runs(self, val, flag=True):
-    if flag:
+  def set_runs(self, val):
+    if self.less_zero(self.runs, val):
+      self.runs = 0
+    else:
       self.runs += val
-    else:
-      self.runs = val
 
-  def set_sac_fly(self, val, flag=True):
-    if flag:
+  def set_sac_fly(self, val):
+    if self.less_zero(self.sac_fly, val):
+      self.sac_fly = 0
+    else:
       self.sac_fly += val
+
+  def set_singles(self, val):
+    if self.less_zero(self.singles, val):
+      self.singles = 0
     else:
-      self.sac_fly = val
+      self.singles += val
 
-  def set_singles(self, val, flag=True):
-    self.singles += val 
-
-  def set_doubles(self, val, flag=True):
-    self.doubles += val 
+  def set_doubles(self, val):
+    if self.less_zero(self.doubles, val):
+      self.doubles = 0
+    else:
+      self.doubles += val 
   
-  def set_triples(self, val, flag=True):
-    self.triples += val 
+  def set_triples(self, val):
+    if self.less_zero(self.triples, val):
+      self.triples = 0
+    else:
+      self.triples += val
   
   def set_AVG(self):
     self.AVG = self.calc_AVG()

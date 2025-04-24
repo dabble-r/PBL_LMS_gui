@@ -38,7 +38,8 @@ class LeagueView():
     num = player.AVG
     name = player.name
     team = player.team
-    avg = float("{:.3f}".format(num))
+    avg = "{:.3f}".format(num)
+    print('add ledaerboard - avg', avg)
     self.update_leaderboard(name, team, avg)
     for i in range(len(self.leaderboard)-1,-1,-1):
       #print(el)
@@ -179,11 +180,13 @@ class BaseballApp():
     print(team, name, stat, val)
 
     ret_board = update_player(self.league, ret_stat, stat, val)
+    avg = float("{:.3f}".format(ret_board.AVG))
    
     for indx, el in enumerate(self.app.leaderboard):
       if el[0] == name:
         self.app.leaderboard.pop(indx)
-        self.app.update_leaderboard(name, team, float(ret_board.AVG))
+        self.app.update_leaderboard(name, team, avg)
+        print('update stat - avg', avg)
         for i in range(len(self.app.leaderboard)-1, -1, -1):
           #print(el)
           el = self.app.leaderboard[i]
@@ -198,15 +201,35 @@ class BaseballApp():
     player = self.stack.get_last().player
     team = self.stack.get_last().team
     print(team, player, stat, val)
+
     find_team = self.league.find_team(team)
     find_player = find_team.get_player(player)
     #print('team', find_team, '\nplayer', player)
+
     print('before', find_player)
     match stat:
       case 'at_bats':
         find_player.set_at_bat(-int(val))
       case 'hits':
         find_player.set_hit(-int(val))
+      case 'walks':
+        find_player.set_bb(-int(val))
+      case 'SO':
+        find_player.set_so(-int(val))
+      case 'HR':
+        find_player.set_hr(-int(val))
+      case 'RBI':
+        find_player.set_rbi(-int(val))
+      case 'runs':
+        find_player.set_runs(-int(val))
+      case 'singles':
+        find_player.set_singles(-int(val))
+      case 'doubles':
+        find_player.set_doubles(-int(val))
+      case 'triples':
+        find_player.set_triples(-int(val))
+      case 'sac_fly':
+        find_player.set_sac_fly(-int(val))
     #print(team, stat, val)
     print('after', find_player)    
    
