@@ -48,6 +48,7 @@ class Player():
     if self.less_zero(self.at_bat, val):
       self.at_bat = 0
     else:
+      print('type val - at bat', type(val))
       self.at_bat += val
         
   def set_hit(self, val):

@@ -175,12 +175,12 @@ class BaseballApp():
     stat = self.selected_option()
     name = self.update_name.get().strip()
     team = self.team_dropdown.get()
-    val = self.update_val.get()
+    val = int(self.update_val.get())
     ret_stat = f'{name}, {team}'
     print(team, name, stat, val)
 
     ret_board = update_player(self.league, ret_stat, stat, val)
-    avg = float("{:.3f}".format(ret_board.AVG))
+    avg = "{:.3f}".format(float(ret_board.AVG))
    
     for indx, el in enumerate(self.app.leaderboard):
       if el[0] == name:
@@ -198,6 +198,7 @@ class BaseballApp():
   def undo_update(self):
     stat = self.stack.get_last().stat 
     val = int(self.stack.get_last().val)
+    print('type val - undo', type(val))
     player = self.stack.get_last().player
     team = self.stack.get_last().team
     print(team, player, stat, val)
@@ -209,27 +210,27 @@ class BaseballApp():
     print('before', find_player)
     match stat:
       case 'at_bats':
-        find_player.set_at_bat(-int(val))
+        find_player.set_at_bat(-val)
       case 'hits':
-        find_player.set_hit(-int(val))
+        find_player.set_hit(-val)
       case 'walks':
-        find_player.set_bb(-int(val))
+        find_player.set_bb(-val)
       case 'SO':
-        find_player.set_so(-int(val))
+        find_player.set_so(-val)
       case 'HR':
-        find_player.set_hr(-int(val))
+        find_player.set_hr(-val)
       case 'RBI':
-        find_player.set_rbi(-int(val))
+        find_player.set_rbi(-val)
       case 'runs':
-        find_player.set_runs(-int(val))
+        find_player.set_runs(-val)
       case 'singles':
-        find_player.set_singles(-int(val))
+        find_player.set_singles(-val)
       case 'doubles':
-        find_player.set_doubles(-int(val))
+        find_player.set_doubles(-val)
       case 'triples':
-        find_player.set_triples(-int(val))
+        find_player.set_triples(-val)
       case 'sac_fly':
-        find_player.set_sac_fly(-int(val))
+        find_player.set_sac_fly(-val)
     #print(team, stat, val)
     print('after', find_player)    
    
