@@ -6,6 +6,7 @@ from player import Player
 from helpers import update_player
 import random
 from bisect import bisect_left, bisect_right, insort
+from stack import Stack
 
 class LeagueView():
   def __init__(self, parent, leaderboard=[]):
@@ -34,10 +35,10 @@ class LeagueView():
     # player arg should have name, team, batting avg 
     #print(player, type(player))
     #print('name attr', player.name)
-    avg = float(player.AVG)
+    num = player.AVG
     name = player.name
     team = player.team
-    #avg = "{:.3f}".format(num)
+    avg = float("{:.3f}".format(num))
     self.update_leaderboard(name, team, avg)
     for i in range(len(self.leaderboard)-1,-1,-1):
       #print(el)
@@ -68,6 +69,7 @@ class BaseballApp():
     self.root.title = 'PBL'
     self.app = app
     self.league = league 
+    self.stack = Stack()
 
     # Team Management Frame
     self.team_frame = tk.Frame(root, padx=10, pady=10)
@@ -125,6 +127,10 @@ class BaseballApp():
 
     tk.Button(self.update_frame, text='Update', command=self.update_stat).grid(row=2, column=2)
 
+    # Player reset functionality
+
+    tk.Button(self.update_frame, text="Undo", command=self.undo_update).grid(row=3, column=2)
+
     # populate radio buttons
     row = 2
     for el in options:
@@ -178,11 +184,32 @@ class BaseballApp():
       if el[0] == name:
         self.app.leaderboard.pop(indx)
         self.app.update_leaderboard(name, team, float(ret_board.AVG))
-        for i in range(len(self.app.leaderboard)-1,-1,-1):
+        for i in range(len(self.app.leaderboard)-1, -1, -1):
           #print(el)
           el = self.app.leaderboard[i]
           self.app.tree.insert('', tk.END, values=(el[0], el[1], el[2]))
-        
+    self.stack.add_node(team, name, stat, val)
+    self.update_name.delete(0, tk.END)
+    self.update_val.delete(0, tk.END)
+  
+  def undo_update(self):
+    stat = self.stack.get_last().stat 
+    val = int(self.stack.get_last().val)
+    player = self.stack.get_last().player
+    team = self.stack.get_last().team
+    print(team, player, stat, val)
+    find_team = self.league.find_team(team)
+    find_player = find_team.get_player(player)
+    #print('team', find_team, '\nplayer', player)
+    print('before', find_player)
+    match stat:
+      case 'at_bats':
+        find_player.set_at_bat(-int(val))
+      case 'hits':
+        find_player.set_hit(-int(val))
+    #print(team, stat, val)
+    print('after', find_player)    
+   
   def selected_option(self):
     print(self.selected.get())
     return self.selected.get()

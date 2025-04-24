@@ -41,11 +41,8 @@ class Player():
   def format_decimal(self, num):
     return "{:.3f}".format(num)
   
-  def set_at_bat(self, val, flag=True):
-    if flag:
+  def set_at_bat(self, val):
       self.at_bat += val
-    else:
-      self.at_bat = val
   
   def set_hit(self, val, flag=True):
     if flag:

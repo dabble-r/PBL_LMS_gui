@@ -1,11 +1,11 @@
 import math
+from node import Node_stack
 
 # preserves last 25 actions
 class Stack():
-  def __init__(self, name, max=25, lst=[]):
-    self.name = name 
-    self.max = max 
-    self.lst = lst 
+  def __init__(self):
+    self.name = "Stack Actions"
+    self.lst = []
 
   def __str__(self):
     ret = ''
@@ -30,20 +30,13 @@ class Stack():
     if len(self.lst) > 0:
       return self.lst[-1]
     
-  def append(self, action):
-    if len(self.lst) < self.max:
-      self.lst.append(action)
-    else:
-      self.lst.pop(0)
-      self.lst.append(action)
+  def add_node(self, team, player, stat, val):
+    new_node = Node_stack(team, player, stat, val)
+    self.lst.append(new_node)
   
   def remove_last(self):
     if len(self.lst) > 0:
       self.lst.pop()
-
-  def remove_first(self):
-    if len(self.lst) > 0:
-      self.lst.pop(0)
 
 
   
