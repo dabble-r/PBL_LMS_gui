@@ -43,23 +43,7 @@ def add_team(team_entry):
     except sqlite3.IntegrityError:
         messagebox.showerror("Error", "Team already exists.")
 
-def load_teams(teams_list, teams_listbox):
-    flag = False
-    #all_teams = teams_list.get(0, tk.END)
-    teams_list['values'] = []
-    conn = sqlite3.connect("baseball_league_gui.db")
-    c = conn.cursor()
-    c.execute("SELECT name FROM teams")
-    teams = [row[0] for row in c.fetchall()]
-    conn.close()
-    teams_list["values"] = teams
-    if not flag:
-      flag = True
-      for team in teams:
-        teams_listbox.insert(tk.END, team)
-        db_team = Team(team)
-        PBL.add_team(db_team)
-    print(PBL)
+
 
 class LeagueView():
   def __init__(self, parent, leaderboard=[]):
@@ -193,6 +177,24 @@ class BaseballApp():
       tk.Radiobutton(self.update_frame, text=tmp, textvariable=tmp, value=tmp, variable=self.selected, command=self.selected_option).grid(row=row, column=1, sticky='w')
       tmp = None
       row += 1
+  
+  def load_teams(self):
+    #all_teams = teams_list.get(0, tk.END)
+    self.team_dropdown['values'] = []
+    conn = sqlite3.connect("baseball_league_gui.db")
+    c = conn.cursor()
+    c.execute("SELECT name FROM teams")
+    teams = [row[0] for row in c.fetchall()]
+    conn.close()
+    self.team_dropdown["values"] = teams
+    teams_listbox_curr = self.team_listbox.get(0, tk.END)
+    for team in teams:
+      db_team = Team(team)
+      db_team = Team(team)
+      PBL.add_team(db_team)
+      if team not in teams_listbox_curr:
+        self.team_listbox.insert(tk.END, team)
+    print(self.league)
 
   # add team function 
   def add_team(self):
@@ -223,7 +225,7 @@ class BaseballApp():
         #self.team_listbox.insert(tk.END, team_name)
         new_team = Team(team_name)
         self.league.add_team(new_team)
-        load_teams(self.team_dropdown, self.team_listbox)
+        self.load_teams()
     except sqlite3.IntegrityError:
         messagebox.showerror("Error", "Team already exists.")
     finally:
@@ -251,7 +253,7 @@ class BaseballApp():
         self.league.remove_team(team_name)
 
         # refresh gui 
-        load_teams(self.team_dropdown, self.team_listbox)
+        self.load_teams()
 
     except sqlite3.Error as e:
         messagebox.showerror("DB Error:", f"An error occurred: {e}.")
