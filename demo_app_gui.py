@@ -7,6 +7,52 @@ from helpers import update_player
 import random
 from bisect import bisect_left, bisect_right, insort
 from stack import Stack
+import sqlite3
+
+# Database Setup
+def init_db():
+    conn = sqlite3.connect("baseball_league_gui.db")
+    c = conn.cursor()
+    c.execute('''CREATE TABLE IF NOT EXISTS teams (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name TEXT UNIQUE NOT NULL)''')
+    c.execute('''CREATE TABLE IF NOT EXISTS players (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name TEXT NOT NULL,
+                    team_id INTEGER,
+                    batting_avg REAL DEFAULT 0.0,
+                    FOREIGN KEY(team_id) REFERENCES teams(id))''')
+    conn.commit()
+    conn.close()
+
+# Functions
+def add_team(team_entry, teams_list):
+    team_name = team_entry.get()
+    if not team_name:
+        messagebox.showwarning("Input Error", "Please enter a team name.")
+        return
+    try:
+        conn = sqlite3.connect("baseball_league_gui.db")
+        c = conn.cursor()
+        c.execute("INSERT INTO teams (name) VALUES (?)", (team_name,))
+        conn.commit()
+        conn.close()
+        team_entry.delete(0, tk.END)
+        load_teams(teams_list)
+    except sqlite3.IntegrityError:
+        messagebox.showerror("Error", "Team already exists.")
+
+def load_teams(teams_list, teams_listbox):
+    #all_teams = teams_list.get(0, tk.END)
+    teams_list['values'] = []
+    conn = sqlite3.connect("baseball_league_gui.db")
+    c = conn.cursor()
+    c.execute("SELECT name FROM teams")
+    teams = [row[0] for row in c.fetchall()]
+    conn.close()
+    teams_list["values"] = teams
+    for team in teams:
+      teams_listbox.insert(tk.END, team)
 
 class LeagueView():
   def __init__(self, parent, leaderboard=[]):
@@ -81,7 +127,7 @@ class BaseballApp():
     self.team_entry = tk.Entry(self.team_frame)
     self.team_entry.grid(row=0, column=1)
 
-    tk.Button(self.team_frame, text="Add Team", command=self.add_team).grid(row=0, column=2)
+    tk.Button(self.team_frame, text="Add Team", command=self.add_team_db).grid(row=0, column=2)
 
     self.team_listbox = tk.Listbox(self.team_frame, height=10, justify='center')
     self.team_listbox.grid(row=1, column=0, columnspan=3)
@@ -150,9 +196,30 @@ class BaseballApp():
       new_team = Team(team)
       #print('team node', new_team)
       self.league.add_team(new_team)
+      add_team(self.team_entry, self.team_dropdown)
       #print('league', self.league)
     self.team_entry.delete(0, tk.END)
   
+  # add team function - sqlite DB functionality
+  def add_team_db(self):
+    team_name = self.team_entry.get()
+    load_teams(self.team_dropdown, self.team_listbox)
+    if not team_name:
+        messagebox.showwarning("Input Error", "Please enter a team name.")
+        return
+    try:
+        conn = sqlite3.connect("baseball_league_gui.db")
+        c = conn.cursor()
+        c.execute("INSERT INTO teams (name) VALUES (?)", (team_name,))
+        conn.commit()
+        conn.close()
+        self.team_entry.delete(0, tk.END)
+        #self.team_listbox.insert(tk.END, team_name)
+        new_team = Team(team_name)
+        self.league.add_team(new_team)
+    except sqlite3.IntegrityError:
+        messagebox.showerror("Error", "Team already exists.")
+      
   # add player function
   def add_player(self):
     player = self.player_entry.get()
@@ -257,6 +324,7 @@ if __name__ == "__main__":
   PBL = LinkedList('PBL')
   league_view = LeagueView(root)
   app = BaseballApp(root, league_view, PBL)
+  init_db()
   root.mainloop()
 
 
