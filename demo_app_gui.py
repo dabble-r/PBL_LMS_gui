@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import ttk, messagebox 
+from tkinter import ttk, messagebox, filedialog
 from linked_list import LinkedList
 from team import Team
 from player import Player
@@ -42,8 +42,6 @@ def add_team(team_entry):
         #load_teams(teams_list)
     except sqlite3.IntegrityError:
         messagebox.showerror("Error", "Team already exists.")
-
-
 
 class LeagueView():
   def __init__(self, parent, leaderboard=[]):
@@ -167,7 +165,6 @@ class BaseballApp():
     tk.Button(self.update_frame, text='Update', command=self.update_stat).grid(row=2, column=2)
 
     # Player reset functionality
-
     tk.Button(self.update_frame, text="Undo", command=self.undo_update).grid(row=3, column=2)
 
     # populate radio buttons
@@ -177,7 +174,10 @@ class BaseballApp():
       tk.Radiobutton(self.update_frame, text=tmp, textvariable=tmp, value=tmp, variable=self.selected, command=self.selected_option).grid(row=row, column=1, sticky='w')
       tmp = None
       row += 1
-  
+    
+    # save progress
+    tk.Button(self.update_frame, text="Save", command=self.save_prompt).grid(row=15, column=2)
+
   def load_teams(self):
     #all_teams = teams_list.get(0, tk.END)
     self.team_dropdown['values'] = []
@@ -196,7 +196,9 @@ class BaseballApp():
         self.team_listbox.insert(tk.END, team)
     print(self.league)
 
+                                      # ----------------------------------------------------------------- #
   # add team function 
+  # deprecated #
   def add_team(self):
     team = self.team_entry.get()
     if team:
@@ -209,6 +211,7 @@ class BaseballApp():
       add_team(self.team_entry, self.team_dropdown)
       #print('league', self.league)
     self.team_entry.delete(0, tk.END)
+                                      # ----------------------------------------------------------------- #
   
   # add team function - sqlite DB functionality
   def add_team_db(self):
@@ -316,7 +319,7 @@ class BaseballApp():
     find_player = find_team.get_player(player)
     #print('team', find_team, '\nplayer', player)
 
-    print('before', find_player)
+    print('last:',find_player)
     match stat:
       case 'at_bats':
         find_player.set_at_bat(-val)
@@ -360,6 +363,41 @@ class BaseballApp():
     except Exception as e:
       print(f'Error: {e}')
       return
+  
+  def save_prompt(self):
+    save_frame = Save()
+
+  
+class Save():
+  def __init__(self):
+    # Ask the user to choose where to save the file
+    self.file_path = self.user_path() 
+  
+  def user_path(self):
+    self.file_path = filedialog.asksaveasfilename(
+      defaultextension=".db",
+      filetypes=[("SQLite Database", "*.db")],
+      title="Save Progress"
+    )
+
+    # Only continue if the user selected a path
+    if self.file_path:
+      # Connect to the source database (e.g., in-memory or existing)
+      source_conn = sqlite3.connect("baseball_league_gui.db")
+      cursor = source_conn.cursor()
+      cursor.execute("CREATE TABLE test (id INTEGER PRIMARY KEY, name TEXT);")
+      cursor.execute("INSERT INTO test (name) VALUES ('Alice');")
+      source_conn.commit()
+      # Create the destination database at chosen path
+      dest_conn = sqlite3.connect(self.file_path)
+      with dest_conn:
+          source_conn.backup(dest_conn)
+      source_conn.close()
+      dest_conn.close()
+      print(f"Database saved to: {self.file_path}")
+    else:
+      print("Save aborted.")
+
 
 if __name__ == "__main__":
   root = tk.Tk()
