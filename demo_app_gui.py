@@ -331,6 +331,7 @@ class BaseballApp():
       self.player_entry.delete(0, tk.END)
 
                                               # ------------------------------------------------------------------------------------ #
+  # deprecated
   # add player function
   def add_player(self):
     player = self.player_entry.get()
@@ -388,6 +389,7 @@ class BaseballApp():
         player_id = result[0]
         query = f"UPDATE players SET {stat} = {stat} + ? WHERE id = ?"
         c.execute(query, (val, player_id))
+        c.execute(f"UPDATE players SET avg = ? WHERE id = ?", (avg, player_id))
         conn.commit()
 
       else:
