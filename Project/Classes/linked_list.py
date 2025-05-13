@@ -1,4 +1,4 @@
-from node import Node
+from Classes.node import Node
 #from team import beef, rougarou
 
 class LinkedList():

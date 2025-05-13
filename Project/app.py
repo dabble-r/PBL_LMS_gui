@@ -1,18 +1,19 @@
 import tkinter as tk
-from tkinter import ttk, messagebox, filedialog
-from linked_list import LinkedList
-from team import Team
-from player import Player
-from helpers import update_player
 import random
 from bisect import bisect_left, bisect_right, insort
-from stack import Stack
 import sqlite3
+from pathlib import Path
+from tkinter import ttk, messagebox, filedialog
+from Classes.linked_list import LinkedList
+from Classes.team import Team
+from Classes.player import Player
+from Classes.stack import Stack
 
 # Database Setup
 def init_db(load):
     print('league:', PBL)
-    conn = sqlite3.connect("baseball_league_gui.db")
+    db_path = Path(__file__).parent / "league.db"
+    conn = sqlite3.connect(db_path)
     c = conn.cursor()
     c.execute('''CREATE TABLE IF NOT EXISTS teams (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -34,7 +35,8 @@ def add_team(team_entry):
         messagebox.showwarning("Input Error", "Please enter a team name.")
         return
     try:
-        conn = sqlite3.connect("baseball_league_gui.db")
+        db_path = Path(__file__).parent / "league.db"
+        conn = sqlite3.connect(db_path)
         c = conn.cursor()
         c.execute("INSERT INTO teams (name) VALUES (?)", (team_name,))
         conn.commit()
@@ -182,7 +184,8 @@ class BaseballApp():
   def load_teams(self):
     #all_teams = teams_list.get(0, tk.END)
     self.team_dropdown['values'] = []
-    conn = sqlite3.connect("baseball_league_gui.db")
+    db_path = Path(__file__).parent / "league.db"
+    conn = sqlite3.connect(db_path)
     c = conn.cursor()
     c.execute("SELECT name FROM teams")
     teams = [row[0] for row in c.fetchall()]
@@ -221,7 +224,8 @@ class BaseballApp():
         messagebox.showwarning("Input Error", "Please enter a team name.")
         return
     try:
-        conn = sqlite3.connect("baseball_league_gui.db")
+        db_path = Path(__file__).parent / "league.db"
+        conn = sqlite3.connect(db_path)
         c = conn.cursor()
         c.execute("INSERT INTO teams (name) VALUES (?)", (team_name,))
         conn.commit()
@@ -241,7 +245,8 @@ class BaseballApp():
         messagebox.showwarning("Input Error", "Please enter a team name.")
         return
     try:
-        conn = sqlite3.connect("baseball_league_gui.db")
+        db_path = Path(__file__).parent / "league.db"
+        conn = sqlite3.connect(db_path)
         c = conn.cursor()
         # delete from sqlite db
         c.execute("DELETE FROM teams WHERE name = (?)", (team_name,))
@@ -290,7 +295,8 @@ class BaseballApp():
       self.app.add_leaderboard(new_player)
       #print('new player:', new_player)
 
-      conn = sqlite3.connect("baseball_league_gui.db")
+      db_path = Path(__file__).parent / "league.db"
+      conn = sqlite3.connect(db_path)
       c = conn.cursor()
       c.execute("SELECT id FROM teams WHERE name = ?", (team_name,))
       team_id = c.fetchone()

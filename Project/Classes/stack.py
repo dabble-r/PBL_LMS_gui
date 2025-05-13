@@ -1,5 +1,5 @@
 import math
-from node import Node_stack
+from Classes.node import Node_stack
 
 # preserves last 25 actions
 class Stack():
