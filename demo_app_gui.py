@@ -11,18 +11,38 @@ import sqlite3
 
 # Database Setup
 def init_db(load):
-    print('league:', PBL)
+    #print('league:', PBL)
     conn = sqlite3.connect("baseball_league_gui.db")
     c = conn.cursor()
     c.execute('''CREATE TABLE IF NOT EXISTS teams (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     name TEXT UNIQUE NOT NULL)''')
-    c.execute('''CREATE TABLE IF NOT EXISTS players (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    name TEXT NOT NULL,
-                    team_id INTEGER,
-                    batting_avg REAL DEFAULT 0.0,
-                    FOREIGN KEY(team_id) REFERENCES teams(id))''')
+    # Create players table with full stat fields
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS players (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            number INTEGER,
+            team_id INTEGER,
+            positions TEXT,
+            at_bats INTEGER DEFAULT 0,
+            hits INTEGER DEFAULT 0,
+            walks INTEGER DEFAULT 0,
+            so INTEGER DEFAULT 0,
+            hr INTEGER DEFAULT 0,
+            rbi INTEGER DEFAULT 0,
+            runs INTEGER DEFAULT 0,
+            singles INTEGER DEFAULT 0,
+            doubles INTEGER DEFAULT 0,
+            triples INTEGER DEFAULT 0,
+            sac_fly INTEGER DEFAULT 0,
+            BABIP REAL DEFAULT 0.0,
+            SLG REAL DEFAULT 0.0,
+            AVG REAL DEFAULT 0.0,
+            ISO REAL DEFAULT 0.0,
+            FOREIGN KEY(team_id) REFERENCES teams(id)
+        )
+    ''')
     conn.commit()
     load()
     conn.close()
@@ -69,16 +89,16 @@ class LeagueView():
   # add player to leaderboard 
   def add_leaderboard(self, player):
     # player arg should have name, team, batting avg 
-    #print(player, type(player))
-    #print('name attr', player.name)
+    ##print(player, type(player))
+    ##print('name attr', player.name)
     num = player.AVG
     name = player.name
     team = player.team
     avg = "{:.3f}".format(num)
-    print('add ledaerboard - avg', avg)
+    #print('add ledaerboard - avg', avg)
     self.update_leaderboard(name, team, avg)
     for i in range(len(self.leaderboard)-1,-1,-1):
-      #print(el)
+      ##print(el)
       el = self.leaderboard[i]
       self.tree.insert('', tk.END, values=(el[0], el[1], el[2]))
   
@@ -163,7 +183,7 @@ class BaseballApp():
 
     self.selected = tk.StringVar(value='at bat')
 
-    tk.Button(self.update_frame, text='Update', command=self.update_stat).grid(row=2, column=2)
+    tk.Button(self.update_frame, text='Update', command=self.update_stat_db).grid(row=2, column=2)
 
     # Player reset functionality
     tk.Button(self.update_frame, text="Undo", command=self.undo_update).grid(row=3, column=2)
@@ -195,7 +215,7 @@ class BaseballApp():
       PBL.add_team(db_team)
       if team not in teams_listbox_curr:
         self.team_listbox.insert(tk.END, team)
-    print(self.league)
+    #print(self.league)
 
                                       # ----------------------------------------------------------------- #
   # add team function 
@@ -205,12 +225,12 @@ class BaseballApp():
     if team:
       self.team_listbox.insert(tk.END, team)
       self.team_dropdown["values"] = self.team_listbox.get(0, tk.END)
-      #print('team', team)
+      ##print('team', team)
       new_team = Team(team)
-      #print('team node', new_team)
+      ##print('team node', new_team)
       self.league.add_team(new_team)
       add_team(self.team_entry, self.team_dropdown)
-      #print('league', self.league)
+      ##print('league', self.league)
     self.team_entry.delete(0, tk.END)
                                       # ----------------------------------------------------------------- #
   
@@ -264,31 +284,31 @@ class BaseballApp():
     finally:
       conn.close()
       self.team_entry.delete(0, tk.END)
-      print(self.league)
+      #print(self.league)
 
   # db - add player function
   def add_player_db(self):
     player = self.player_entry.get()
     team = self.team_select.get()
-    print('team get:', team)
-    # print(team)
+    #print('team get:', team)
+    # #print(team)
     if not player:
       messagebox.showwarning("Input Error", "Please enter a player name.")
       return
     try:
-      print('adding new player...\n')
+      #print('adding new player...\n')
       raw_lst = list(map(lambda x: x.strip(), player.split(',')))
       raw_lst.insert(0, team)
-      #print(raw_lst)
+      ##print(raw_lst)
       team_name = raw_lst[0]
       player_name = raw_lst[1]
 
       new_player = Player.format_player(self, raw_lst)
-      #print('new player - avg', new_player.AVG)
+      ##print('new player - avg', new_player.AVG)
 
       self.add_player_team(new_player, team)
       self.app.add_leaderboard(new_player)
-      #print('new player:', new_player)
+      ##print('new player:', new_player)
 
       conn = sqlite3.connect("baseball_league_gui.db")
       c = conn.cursor()
@@ -296,12 +316,12 @@ class BaseballApp():
       team_id = c.fetchone()
 
       if team_id:
-        print(f"Found team: {team_id[0]}")
+        #print(f"Found team: {team_id[0]}")
         c.execute("INSERT INTO players (name, team_id) VALUES (?, ?)", (player_name, team_id[0]))
         conn.commit()
       else:
         print(f"No id found for team {team}")
-      conn.close()
+        conn.close()
 
     except:
       print('error adding new player')
@@ -315,20 +335,77 @@ class BaseballApp():
   def add_player(self):
     player = self.player_entry.get()
     team = self.team_select.get()
-    # print(team)
+    # #print(team)
     if player:
-      # print('new player', player)
+      # #print('new player', player)
       raw_lst = list(map(lambda x: x.strip(), player.split(',')))
       raw_lst.insert(0, team)
-      #print(raw_lst)
+      ##print(raw_lst)
       new_player = Player.format_player(self, raw_lst)
-      #print('new player - avg', new_player.AVG)
+      ##print('new player - avg', new_player.AVG)
       self.add_player_team(new_player, team)
       self.app.add_leaderboard(new_player)
-      print('new player', new_player)
+      #print('new player', new_player)
     self.player_entry.delete(0, tk.END)
                                               # ------------------------------------------------------------------------------------ #
+   # update player stat
+  def update_stat_db(self):
+    stat = self.selected_option()
+    player = self.update_name.get().strip()
+    team = self.team_dropdown.get()
+    val = int(self.update_val.get())
+    ret_stat = f'{player}, {team}'
+    print(team, player, stat, val)
 
+    if not player:
+      messagebox.showwarning("Input Error", "Please enter a player name.")
+      return
+    
+    try:
+      # GUI update
+      ret_board = update_player(self.league, ret_stat, stat, val)
+      avg = "{:.3f}".format(float(ret_board.AVG))
+   
+      for indx, el in enumerate(self.app.leaderboard):
+        if el[0] == player:
+          self.app.leaderboard.pop(indx)
+          self.app.update_leaderboard(player, team, avg)
+          #print('update stat - avg', avg)
+          for i in range(len(self.app.leaderboard)-1, -1, -1):
+            ##print(el)
+            el = self.app.leaderboard[i]
+            self.app.tree.insert('', tk.END, values=(el[0], el[1], el[2]))
+      self.stack.add_node(team, player, stat, val)
+
+      # sqlite db update
+      conn = sqlite3.connect("baseball_league_gui.db")
+      c = conn.cursor()
+      c.execute("SELECT id FROM players WHERE name = ?", (player,))
+      result = c.fetchone()
+      print('result', result)
+
+      if result:
+        player_id = result[0]
+        query = f"UPDATE players SET {stat} = {stat} + ? WHERE id = ?"
+        c.execute(query, (val, player_id))
+        conn.commit()
+
+      else:
+        print(f"No id found for team {player}")
+        conn.close()
+
+    except:
+      print(f'Error updating {stat} for {player}')
+
+    finally:
+      if conn:
+        conn.close()
+      print('completed player updates')
+      #self.update_name.delete(0, tk.END)
+      self.update_val.delete(0, tk.END)
+
+                                        # --------------------------------------------------------------------------------------- #
+  # deprecated
   # update player stat
   def update_stat(self):
     stat = self.selected_option()
@@ -336,7 +413,7 @@ class BaseballApp():
     team = self.team_dropdown.get()
     val = int(self.update_val.get())
     ret_stat = f'{name}, {team}'
-    print(team, name, stat, val)
+    #print(team, name, stat, val)
 
     ret_board = update_player(self.league, ret_stat, stat, val)
     avg = "{:.3f}".format(float(ret_board.AVG))
@@ -345,28 +422,29 @@ class BaseballApp():
       if el[0] == name:
         self.app.leaderboard.pop(indx)
         self.app.update_leaderboard(name, team, avg)
-        print('update stat - avg', avg)
+        #print('update stat - avg', avg)
         for i in range(len(self.app.leaderboard)-1, -1, -1):
-          #print(el)
+          ##print(el)
           el = self.app.leaderboard[i]
           self.app.tree.insert('', tk.END, values=(el[0], el[1], el[2]))
     self.stack.add_node(team, name, stat, val)
     self.update_name.delete(0, tk.END)
     self.update_val.delete(0, tk.END)
+                                          # --------------------------------------------------------------------------------------- #
   
   def undo_update(self):
     stat = self.stack.get_last().stat 
     val = int(self.stack.get_last().val)
-    print('type val - undo', type(val))
+    #print('type val - undo', type(val))
     player = self.stack.get_last().player
     team = self.stack.get_last().team
-    print(team, player, stat, val)
+    #print(team, player, stat, val)
 
     find_team = self.league.find_team(team)
     find_player = find_team.get_player(player)
-    #print('team', find_team, '\nplayer', player)
+    ##print('team', find_team, '\nplayer', player)
 
-    print('last:',find_player)
+    #print('last:',find_player)
     match stat:
       case 'at_bats':
         find_player.set_at_bat(-val)
@@ -390,11 +468,11 @@ class BaseballApp():
         find_player.set_triples(-val)
       case 'sac_fly':
         find_player.set_sac_fly(-val)
-    #print(team, stat, val)
-    print('after', find_player)    
+    ##print(team, stat, val)
+    #print('after', find_player)    
    
   def selected_option(self):
-    print(self.selected.get())
+    #print(self.selected.get())
     return self.selected.get()
   
   # add player to team roster
@@ -402,13 +480,13 @@ class BaseballApp():
     find_team = self.league.find_team(team)
     try:
       find_team.add_player(new_player)
-      # print('player', new_player.name)
-      # print('team', find_team.name)
+      # #print('player', new_player.name)
+      # #print('team', find_team.name)
       self.player_tree.insert("", tk.END, values=(new_player.name, find_team.name))
-      print('league', self.league)
-      print('players', self.league.view_all())
+      #print('league', self.league)
+      #print('players', self.league.view_all())
     except Exception as e:
-      print(f'Error: {e}')
+      #print(f'Error: {e}')
       return
   
   def save_prompt(self):
