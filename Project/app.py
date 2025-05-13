@@ -12,7 +12,7 @@ from Classes.stack import Stack
 # Database Setup
 def init_db(load):
     print('league:', PBL)
-    db_path = Path(__file__).parent / "league.db"
+    db_path = Path(__file__).parent / "db" / "league.db"
     conn = sqlite3.connect(db_path)
     c = conn.cursor()
     c.execute('''CREATE TABLE IF NOT EXISTS teams (
@@ -35,7 +35,7 @@ def add_team(team_entry):
         messagebox.showwarning("Input Error", "Please enter a team name.")
         return
     try:
-        db_path = Path(__file__).parent / "league.db"
+        db_path = Path(__file__).parent / "db" / "league.db"
         conn = sqlite3.connect(db_path)
         c = conn.cursor()
         c.execute("INSERT INTO teams (name) VALUES (?)", (team_name,))
@@ -184,7 +184,7 @@ class BaseballApp():
   def load_teams(self):
     #all_teams = teams_list.get(0, tk.END)
     self.team_dropdown['values'] = []
-    db_path = Path(__file__).parent / "league.db"
+    db_path = Path(__file__).parent / "db" / "league.db"
     conn = sqlite3.connect(db_path)
     c = conn.cursor()
     c.execute("SELECT name FROM teams")
@@ -224,7 +224,7 @@ class BaseballApp():
         messagebox.showwarning("Input Error", "Please enter a team name.")
         return
     try:
-        db_path = Path(__file__).parent / "league.db"
+        db_path = Path(__file__).parent / "db" / "league.db"
         conn = sqlite3.connect(db_path)
         c = conn.cursor()
         c.execute("INSERT INTO teams (name) VALUES (?)", (team_name,))
@@ -245,7 +245,7 @@ class BaseballApp():
         messagebox.showwarning("Input Error", "Please enter a team name.")
         return
     try:
-        db_path = Path(__file__).parent / "league.db"
+        db_path = Path(__file__).parent / "db" / "league.db"
         conn = sqlite3.connect(db_path)
         c = conn.cursor()
         # delete from sqlite db
@@ -295,7 +295,7 @@ class BaseballApp():
       self.app.add_leaderboard(new_player)
       #print('new player:', new_player)
 
-      db_path = Path(__file__).parent / "league.db"
+      db_path = Path(__file__).parent / "db" / "league.db"
       conn = sqlite3.connect(db_path)
       c = conn.cursor()
       c.execute("SELECT id FROM teams WHERE name = ?", (team_name,))
