@@ -137,7 +137,7 @@ class BaseballApp():
     self.team_dropdown = ttk.Combobox(self.player_frame, textvariable=self.team_select)
     self.team_dropdown.grid(row=1, column=1)
     
-    tk.Button(self.player_frame, text="Add Player)", command=self.add_player).grid(row=2, column=1)
+    tk.Button(self.player_frame, text="Add Player)", command=self.add_player_db).grid(row=2, column=1)
 
     self.player_tree = ttk.Treeview(self.player_frame, columns=("Player", "Team"), show="headings")
     self.player_tree.heading("Player", text="Player Name")
@@ -265,6 +265,51 @@ class BaseballApp():
       self.team_entry.delete(0, tk.END)
       print(self.league)
 
+  # db - add player function
+  def add_player_db(self):
+    player = self.player_entry.get()
+    team = self.team_select.get()
+    print('team get:', team)
+    # print(team)
+    if not player:
+      messagebox.showwarning("Input Error", "Please enter a player name.")
+      return
+    try:
+      print('adding new player...\n')
+      raw_lst = list(map(lambda x: x.strip(), player.split(',')))
+      raw_lst.insert(0, team)
+      #print(raw_lst)
+      team_name = raw_lst[0]
+      player_name = raw_lst[1]
+
+      new_player = Player.format_player(self, raw_lst)
+      #print('new player - avg', new_player.AVG)
+
+      self.add_player_team(new_player, team)
+      self.app.add_leaderboard(new_player)
+      #print('new player:', new_player)
+
+      conn = sqlite3.connect("baseball_league_gui.db")
+      c = conn.cursor()
+      c.execute("SELECT id FROM teams WHERE name = ?", (team_name,))
+      team_id = c.fetchone()
+
+      if team_id:
+        print(f"Found team: {team_id[0]}")
+        c.execute("INSERT INTO players (name, team_id) VALUES (?, ?)", (player_name, team_id[0]))
+        conn.commit()
+      else:
+        print(f"No id found for team {team}")
+      conn.close()
+
+    except:
+      print('error adding new player')
+
+    finally:
+      print('completed adding new player')
+      self.player_entry.delete(0, tk.END)
+
+                                              # ------------------------------------------------------------------------------------ #
   # add player function
   def add_player(self):
     player = self.player_entry.get()
@@ -281,6 +326,7 @@ class BaseballApp():
       self.app.add_leaderboard(new_player)
       print('new player', new_player)
     self.player_entry.delete(0, tk.END)
+                                              # ------------------------------------------------------------------------------------ #
 
   # update player stat
   def update_stat(self):
