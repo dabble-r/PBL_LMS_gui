@@ -8,6 +8,7 @@ import random
 from bisect import bisect_left, bisect_right, insort
 from stack import Stack
 import sqlite3
+import json
 
 # Database Setup
 def init_db(load):
@@ -299,9 +300,13 @@ class BaseballApp():
       #print('adding new player...\n')
       raw_lst = list(map(lambda x: x.strip(), player.split(',')))
       raw_lst.insert(0, team)
-      ##print(raw_lst)
+      print(raw_lst)
       team_name = raw_lst[0]
       player_name = raw_lst[1]
+      number = int(raw_lst[2])
+      positions_raw = raw_lst[3:]
+      positions_json = json.dumps(positions_raw)
+      print(player_name, team_name, number, positions_json)
 
       new_player = Player.format_player(self, raw_lst)
       ##print('new player - avg', new_player.AVG)
@@ -317,7 +322,7 @@ class BaseballApp():
 
       if team_id:
         #print(f"Found team: {team_id[0]}")
-        c.execute("INSERT INTO players (name, team_id) VALUES (?, ?)", (player_name, team_id[0]))
+        c.execute("INSERT INTO players (name, number, positions, team_id) VALUES (?, ?, ?, ?)", (player_name, number, positions_json, team_id[0],))
         conn.commit()
       else:
         print(f"No id found for team {team}")
