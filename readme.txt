@@ -1,44 +1,5 @@
-create player class
-  - each player starts with basic info
-create team class
-  - each team starts with empty list
-  - add player, appends new player instance to team list
-  - each team is a node
-  - next pointer points to next team
-create league class
-  - league starts with no head
-  - add new team isntance, create new head or append as last node
+How to Run:
 
-  Update Player:
-    1 user enters choice of stat t
-
-GUI Layout:
-
-Display Landing:
-- user has access to GUI window
-- label and text field
-- user prompted to create a league
-
-Display Initial:
-- user has access to list of menu 1 options
-- user selects 1 of 10 options
-  - if no teams created yet 
-    - user prompted to enter team name and max roster size (optional)
-    - user prompted to continue with another action
-- user has access to initial menu
-
-Display User Action (2):
-- user has access to list of initial menu options
-  - if Update 
-    - user has access to list of menu 2 options 
-  - else 
-    - user has access to functionality of user action (create team/player, remove team/player, etc.)
-
-Display User Action/Continue: 
-- if user wishes to continue updating curr player
-  - user has access to menu 2 
-else:
-  - if user wants to continue with another action 
-    - user has access to menu 1
-  - else 
-    - user quits program
+1. Unzip this folder
+2. Double-click 'main.exe' (on Windows) or run './app' (on Linux)
+3. Enjoy!
