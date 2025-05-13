@@ -3,9 +3,9 @@
   * player batting average does not reset in GUI or in league 
 
 # save functionality 
-1 - update DB
-2 - determine file path 
-3 - save current DB to selected file path 
+1 - update DB -- DONE
+2 - determine file path -- DONE
+3 - save current DB to selected file path -- DONE
 
 # individual player display 
 1 - select player from self.listbox 
@@ -14,3 +14,6 @@
 # individual player creation 
 1 - notes/anecdotes section of player instance
 2 - display notes/anecdotes of individual player from pop-up GUI
+
+# refresh/load teams and players 
+1 - GUI loads all teams and players upon starting program -- DONE

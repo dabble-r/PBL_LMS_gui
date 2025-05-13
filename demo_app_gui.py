@@ -10,7 +10,7 @@ from stack import Stack
 import sqlite3
 
 # Database Setup
-def init_db():
+def init_db(load):
     print('league:', PBL)
     conn = sqlite3.connect("baseball_league_gui.db")
     c = conn.cursor()
@@ -24,6 +24,7 @@ def init_db():
                     batting_avg REAL DEFAULT 0.0,
                     FOREIGN KEY(team_id) REFERENCES teams(id))''')
     conn.commit()
+    load()
     conn.close()
 
 # Functions
@@ -413,7 +414,6 @@ class BaseballApp():
   def save_prompt(self):
     save_frame = Save()
 
-  
 class Save():
   def __init__(self):
     # Ask the user to choose where to save the file
@@ -450,7 +450,7 @@ if __name__ == "__main__":
   PBL = LinkedList('PBL')
   league_view = LeagueView(root)
   app = BaseballApp(root, league_view, PBL)
-  init_db()
+  init_db(app.load_teams)
   root.mainloop()
 
 
