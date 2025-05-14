@@ -21,3 +21,6 @@
 # individual stat update:
 1 - player stats -- DONE
 2 - player number/position - sync to sqlite db
+
+# GUI appearance
+1 - increase fint size overall

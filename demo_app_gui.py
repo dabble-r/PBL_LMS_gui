@@ -9,6 +9,7 @@ from bisect import bisect_left, bisect_right, insort
 from stack import Stack
 import sqlite3
 import json
+from decimal import Decimal
 
 # Database Setup
 def init_db(load):
@@ -37,10 +38,10 @@ def init_db(load):
             doubles INTEGER DEFAULT 0,
             triples INTEGER DEFAULT 0,
             sac_fly INTEGER DEFAULT 0,
-            BABIP REAL DEFAULT 0.0,
-            SLG REAL DEFAULT 0.0,
-            AVG REAL DEFAULT 0.0,
-            ISO REAL DEFAULT 0.0,
+            BABIP REAL DEFAULT 0.000,
+            SLG REAL DEFAULT 0.000,
+            AVG REAL DEFAULT 0.000,
+            ISO REAL DEFAULT 0.000,
             FOREIGN KEY(team_id) REFERENCES teams(id)
         )
     ''')
@@ -300,13 +301,13 @@ class BaseballApp():
       #print('adding new player...\n')
       raw_lst = list(map(lambda x: x.strip(), player.split(',')))
       raw_lst.insert(0, team)
-      print(raw_lst)
+      #print(raw_lst)
       team_name = raw_lst[0]
       player_name = raw_lst[1]
       number = int(raw_lst[2])
       positions_raw = raw_lst[3:]
       positions_json = json.dumps(positions_raw)
-      print(player_name, team_name, number, positions_json)
+      #print(player_name, team_name, number, positions_json)
 
       new_player = Player.format_player(self, raw_lst)
       ##print('new player - avg', new_player.AVG)
@@ -354,7 +355,7 @@ class BaseballApp():
       #print('new player', new_player)
     self.player_entry.delete(0, tk.END)
                                               # ------------------------------------------------------------------------------------ #
-   # update player stat
+  # update player stat
   def update_stat_db(self):
     stat = self.selected_option()
     player = self.update_name.get().strip()
@@ -367,6 +368,7 @@ class BaseballApp():
       messagebox.showwarning("Input Error", "Please enter a player name.")
       return
     
+    conn = sqlite3.connect("baseball_league_gui.db")
     try:
       # GUI update
       ret_board = update_player(self.league, ret_stat, stat, val)
@@ -384,32 +386,81 @@ class BaseballApp():
       self.stack.add_node(team, player, stat, val)
 
       # sqlite db update
-      conn = sqlite3.connect("baseball_league_gui.db")
       c = conn.cursor()
-      c.execute("SELECT id FROM players WHERE name = ?", (player,))
+      c.execute("SELECT id, at_bats, hits, walks, so, hr, rbi, runs, singles, doubles, triples, sac_fly, SLG, AVG FROM players WHERE name = ?", (player,))
       result = c.fetchone()
       print('result', result)
 
       if result:
-        player_id = result[0]
-        query = f"UPDATE players SET {stat} = {stat} + ? WHERE id = ?"
-        c.execute(query, (val, player_id))
-        c.execute(f"UPDATE players SET avg = ? WHERE id = ?", (avg, player_id))
+        player_id, at_bats, hits, walks, so, hr, rbi, runs, singles, doubles, triples, sac_fly, slg, avg_db = result
+        new_BABIP = self.update_BABIP(hits, hr, at_bats, so, sac_fly)
+        new_SLG = self.update_SLG(singles, doubles, triples, hr, at_bats)
+        new_ISO = self.update_ISO(doubles, triples, hr, slg, avg_db)
+        new_AVG = self.update_AVG(at_bats, hits)
+        print('new avg', new_AVG, type(new_AVG))
+        print('new slg', new_SLG, type(new_SLG))
+        print('new BABIP', new_BABIP, type(new_BABIP))
+        print('new ISO', new_ISO, type(new_ISO))
+        #print('avg db', avg_db, type(avg_db))
+        #print('avg - format', self.format_decimal(avg_db))
+
+        # user manual update
+        query = f"""
+          UPDATE players 
+          SET {stat} = {stat} + ?, 
+            BABIP = ?, 
+            SLG = ?, 
+            ISO = ?, 
+            AVG = ?
+          WHERE id = ?
+        """
+        params = (val, new_BABIP, new_SLG, new_ISO, new_AVG, player_id)
+        c.execute(query, params)
         conn.commit()
 
       else:
         print(f"No id found for team {player}")
-        conn.close()
 
     except:
       print(f'Error updating {stat} for {player}')
 
     finally:
-      if conn:
-        conn.close()
+      conn.close()
       print('completed player updates')
       #self.update_name.delete(0, tk.END)
       self.update_val.delete(0, tk.END)
+  
+  def update_AVG(self, at_bats, hits):
+    if at_bats == 0:
+      return 0
+    ret = hits / at_bats
+    #print(self.at_bat, self.hit)
+    return float(self.format_decimal(ret))
+    
+  def update_BABIP(self, hits, hr, at_bats, so, sac_fly):
+    if (at_bats - so - hr + sac_fly) <= 0:
+      return 0
+    ret = (hits - hr) / (at_bats - so - hr + sac_fly)
+    return float(self.format_decimal(ret))
+
+  def update_SLG(self, singles, doubles, triples, hr, at_bats):
+    if at_bats == 0:
+      return 0
+    ret = (singles + (2 * doubles) + (3 * triples) + (4 * hr) ) / at_bats
+    return float(self.format_decimal(ret))
+
+  def update_ISO(self, doubles, triples, hr, slg, avg):
+    if slg - avg <= 0:
+      return 0
+    ret = ( (1 * doubles) + (2 * triples) + (3 * hr ) ) / slg - avg
+    return float(self.format_decimal(ret))
+
+  def format_decimal(self, num):
+    #print('fromat type', type("{:.3f}".format(num)))
+    dec_num = Decimal(f"{num}")
+    format_num = dec_num.quantize(Decimal("0.000"))
+    #print('formatted num', format_num, type(format_num))
+    return format_num
 
                                         # --------------------------------------------------------------------------------------- #
   # deprecated
