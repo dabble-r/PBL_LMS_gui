@@ -20,7 +20,8 @@
 
 # individual stat update:
 1 - player stats -- DONE
-2 - player number/position - sync to sqlite db
+2 - player number/position - sync to sqlite db DONE 
+3 - undo stat update -- reflected in leaderboard (avg), no sync to sqlite db
 
 # GUI appearance
 1 - increase fint size overall

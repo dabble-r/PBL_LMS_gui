@@ -12,7 +12,7 @@ import json
 from decimal import Decimal
 
 # Database Setup
-def init_db(load):
+def init_db(load_teams, load_players):
     #print('league:', PBL)
     conn = sqlite3.connect("baseball_league_gui.db")
     c = conn.cursor()
@@ -46,7 +46,8 @@ def init_db(load):
         )
     ''')
     conn.commit()
-    load()
+    load_teams()
+    load_players()
     conn.close()
 
 # Functions
@@ -203,6 +204,7 @@ class BaseballApp():
 
   def load_teams(self):
     #all_teams = teams_list.get(0, tk.END)
+    #print(all_teams)
     self.team_dropdown['values'] = []
     conn = sqlite3.connect("baseball_league_gui.db")
     c = conn.cursor()
@@ -218,6 +220,26 @@ class BaseballApp():
       if team not in teams_listbox_curr:
         self.team_listbox.insert(tk.END, team)
     #print(self.league)
+  
+  def load_players(self):
+    #all_players = self.player_tree.get_children()
+    #print(all_players)
+    conn = sqlite3.connect("baseball_league_gui.db")
+    c = conn.cursor()
+    #c.execute("SELECT name, team_id FROM players")
+    c.execute("""
+      SELECT players.name, teams.name
+      FROM players
+      JOIN teams on players.team_id = teams.id
+    """
+    )
+    results = c.fetchall()
+    #players = [(row[0], row[1]) for row in c.fetchall()]
+    #print(players)
+    #print(results)
+    for el in results:
+      player, team = el
+      self.player_tree.insert("", tk.END, values=(player, team))
 
                                       # ----------------------------------------------------------------- #
   # add team function 
@@ -397,10 +419,10 @@ class BaseballApp():
         new_SLG = self.update_SLG(singles, doubles, triples, hr, at_bats)
         new_ISO = self.update_ISO(doubles, triples, hr, slg, avg_db)
         new_AVG = self.update_AVG(at_bats, hits)
-        print('new avg', new_AVG, type(new_AVG))
-        print('new slg', new_SLG, type(new_SLG))
-        print('new BABIP', new_BABIP, type(new_BABIP))
-        print('new ISO', new_ISO, type(new_ISO))
+        #print('new avg', new_AVG, type(new_AVG))
+        #print('new slg', new_SLG, type(new_SLG))
+        #print('new BABIP', new_BABIP, type(new_BABIP))
+        #print('new ISO', new_ISO, type(new_ISO))
         #print('avg db', avg_db, type(avg_db))
         #print('avg - format', self.format_decimal(avg_db))
 
@@ -585,7 +607,7 @@ if __name__ == "__main__":
   PBL = LinkedList('PBL')
   league_view = LeagueView(root)
   app = BaseballApp(root, league_view, PBL)
-  init_db(app.load_teams)
+  init_db(app.load_teams, app.load_players)
   root.mainloop()
 
 
