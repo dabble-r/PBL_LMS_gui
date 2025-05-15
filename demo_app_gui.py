@@ -167,12 +167,15 @@ class BaseballApp():
     self.team_dropdown = ttk.Combobox(self.player_frame, textvariable=self.team_select)
     self.team_dropdown.grid(row=1, column=1)
     
-    tk.Button(self.player_frame, text="Add Player)", command=self.add_player_db).grid(row=2, column=1)
+    tk.Button(self.player_frame, text="Add", command=self.add_player_db).grid(row=2, column=0, padx=(0,4), pady=2, sticky="ew")
 
     self.player_tree = ttk.Treeview(self.player_frame, columns=("Player", "Team"), show="headings")
     self.player_tree.heading("Player", text="Player Name")
     self.player_tree.heading("Team", text="Team")
     self.player_tree.grid(row=3, column=0, columnspan=2)
+
+    # remove player button
+    tk.Button(self.player_frame, text="Remove", command=self.remove_player_all_locs).grid(row=2, column=1, padx=(4,0), pady=2, sticky="ew")
 
     # Player update frame
     options = ['at_bats', 'hits', 'walks', 'SO', 'HR', 'RBI', 'runs', 'singles', 'doubles', 'triples', 'sac_fly']
@@ -251,6 +254,18 @@ class BaseballApp():
       # league view players/teams (unsorted)
       self.player_tree.insert("", tk.END, values=(player, team))
     print('load player res', results)
+
+  def remove_one_player_tree(self, target_player):
+    players = self.player_tree.get_children()
+    for el in players:
+      player = self.player_tree.item(el, "values")
+      if player[0] == target_player:
+        self.player_tree.delete(el)
+        print("deleted player")
+      #print(el)
+      #print(player)
+    #print('player not found in tree')
+      
   
   def load_players(self):
     conn = sqlite3.connect("baseball_league_gui.db")
@@ -485,7 +500,6 @@ class BaseballApp():
         c.execute(query, params)
         conn.commit()
 
-        
         '''# GUI update
         ret_board = update_player(self.league, ret_stat, stat, val)
         avg = "{:.3f}".format(float(ret_board.AVG))
@@ -515,6 +529,45 @@ class BaseballApp():
       # GUI update stat
       self.load_leaderboard()
   
+  # remove player from db, league, and GUI
+  def remove_player_all_locs(self):
+    select_player = self.player_tree.selection()
+    print('remove player - selection', select_player)
+    if select_player:
+      name, team = self.player_tree.item(select_player[0], "values")
+      #print(name, team)
+
+      # remove from league
+      find_team = PBL.find_team(team)
+      if find_team:
+        #print('found team', find_team)
+        find_team.remove_player(name)
+      else:
+        print('remove team not found!')
+
+      # remove from DB
+      conn = sqlite3.connect("baseball_league_gui.db")
+      try:
+        # sqlite db update
+        c = conn.cursor()
+        c.execute("SELECT * FROM players WHERE name = ?", (name,))
+        result = c.fetchall()[0]
+        #print('result', result)
+        if result:
+          name = result[1]
+          #print('remove name DB', name)
+          query = "DELETE FROM players where name = ?"
+          c.execute(query, (name,))
+          conn.commit()
+          print('player removed from DB!')
+      except:
+        print('remove player not deleted!')
+
+      # remove from GUI
+      self.load_leaderboard()
+      self.remove_one_player_tree(name)
+
+
   def update_AVG(self, at_bats, hits):
     if at_bats == 0:
       return 0
