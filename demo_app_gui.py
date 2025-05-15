@@ -297,9 +297,6 @@ class BaseballApp():
     finally:
       #print(PBL.view_all())
       print('completed loading players/team')
-    
-      #print('up leader indx', indx)
-      #self.app.clear_tree()
 
                                    # ----------------------------------------------------------------- #
 
@@ -454,21 +451,6 @@ class BaseballApp():
     
     conn = sqlite3.connect("baseball_league_gui.db")
     try:
-      # GUI update
-      ret_board = update_player(self.league, ret_stat, stat, val)
-      avg = "{:.3f}".format(float(ret_board.AVG))
-   
-      for indx, el in enumerate(self.app.leaderboard):
-        if el[0] == player:
-          self.app.leaderboard.pop(indx)
-          self.app.update_leaderboard(player, team, avg)
-          #print('update stat - avg', avg)
-          for i in range(len(self.app.leaderboard)-1, -1, -1):
-            ##print(el)
-            el = self.app.leaderboard[i]
-            self.app.tree.insert('', tk.END, values=(el[0], el[1], el[2]))
-      self.stack.add_node(team, player, stat, val)
-
       # sqlite db update
       c = conn.cursor()
       c.execute("SELECT id, at_bats, hits, walks, so, hr, rbi, runs, singles, doubles, triples, sac_fly, SLG, AVG FROM players WHERE name = ?", (player,))
@@ -501,6 +483,23 @@ class BaseballApp():
         params = (val, new_BABIP, new_SLG, new_ISO, new_AVG, player_id)
         c.execute(query, params)
         conn.commit()
+
+        # GUI update stat
+        self.load_leaderboard()
+        '''# GUI update
+        ret_board = update_player(self.league, ret_stat, stat, val)
+        avg = "{:.3f}".format(float(ret_board.AVG))
+    
+        for indx, el in enumerate(self.app.leaderboard):
+          if el[0] == player:
+            self.app.leaderboard.pop(indx)
+            self.app.update_leaderboard(player, team, avg)
+            #print('update stat - avg', avg)
+            for i in range(len(self.app.leaderboard)-1, -1, -1):
+              ##print(el)
+              el = self.app.leaderboard[i]
+              self.app.tree.insert('', tk.END, values=(el[0], el[1], el[2]))
+        self.stack.add_node(team, player, stat, val)'''
 
       else:
         print(f"No id found for team {player}")
@@ -547,6 +546,7 @@ class BaseballApp():
     return format_num
 
                                         # --------------------------------------------------------------------------------------- #
+  
   # deprecated
   # update player stat
   def update_stat(self):
