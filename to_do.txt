@@ -6,6 +6,7 @@
 1 - update DB -- DONE
 2 - determine file path -- DONE
 3 - save current DB to selected file path -- DONE
+4 - option to start new BD or load existing DB from local file path - 
 
 # individual player display 
 1 - select player from self.listbox 
@@ -17,11 +18,13 @@
 
 # refresh/load teams and players 
 1 - GUI loads all teams and players upon starting program -- DONE
+2 - GUI loads all players to leaderboard upon start
 
 # individual stat update:
 1 - player stats -- DONE
 2 - player number/position - sync to sqlite db DONE 
 3 - undo stat update -- reflected in leaderboard (avg), no sync to sqlite db
+4 - update stat of existing player in db, entered in previous session - update_db does not find player
 
 # GUI appearance
 1 - increase fint size overall

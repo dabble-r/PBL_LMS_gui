@@ -12,7 +12,7 @@ import json
 from decimal import Decimal
 
 # Database Setup
-def init_db(load_teams, load_players):
+def init_db(load_teams, load_players_tree, load_players, load_leaderboard):
     #print('league:', PBL)
     conn = sqlite3.connect("baseball_league_gui.db")
     c = conn.cursor()
@@ -47,7 +47,9 @@ def init_db(load_teams, load_players):
     ''')
     conn.commit()
     load_teams()
+    load_players_tree()
     load_players()
+    load_leaderboard()
     conn.close()
 
 # Functions
@@ -98,11 +100,13 @@ class LeagueView():
     name = player.name
     team = player.team
     avg = "{:.3f}".format(num)
-    #print('add ledaerboard - avg', avg)
+    #print('add leaderboard', name,team,num,avg)
     self.update_leaderboard(name, team, avg)
+    #print('leaderboard after update', self.leaderboard)
     for i in range(len(self.leaderboard)-1,-1,-1):
       ##print(el)
       el = self.leaderboard[i]
+      #print('leaderboard el', el)
       self.tree.insert('', tk.END, values=(el[0], el[1], el[2]))
   
   # clear all tree vals for new sorted leaderboard  
@@ -110,7 +114,7 @@ class LeagueView():
     for el in self.tree.get_children():
       self.tree.delete(el)
 
-  # insort - sort avgs in leaderbaord, find indx of new avg
+  # insort - sort avgs in leaderboard, find indx of new avg
   def insort_leaderboard(self, new_avg):
     avgs = [x[2] for x in self.leaderboard]
     indx = bisect_right(avgs, new_avg)
@@ -119,8 +123,10 @@ class LeagueView():
   # insert_leaderbaord
   def update_leaderboard(self, name, team, avg):
     indx = self.insort_leaderboard(avg)
+    #print('up leader indx', indx)
     self.leaderboard.insert(indx, (name, team, avg))
-    self.clear_tree()
+    #print('lyst insert', lyst)
+    #self.clear_tree()
 
 class BaseballApp():
   # initialize
@@ -221,14 +227,14 @@ class BaseballApp():
         self.team_listbox.insert(tk.END, team)
     #print(self.league)
   
-  def load_players(self):
+  def load_players_tree(self):
     #all_players = self.player_tree.get_children()
     #print(all_players)
     conn = sqlite3.connect("baseball_league_gui.db")
     c = conn.cursor()
     #c.execute("SELECT name, team_id FROM players")
     c.execute("""
-      SELECT players.name, teams.name
+      SELECT players.name, teams.name, players.AVG
       FROM players
       JOIN teams on players.team_id = teams.id
     """
@@ -237,11 +243,66 @@ class BaseballApp():
     #players = [(row[0], row[1]) for row in c.fetchall()]
     #print(players)
     #print(results)
+    player = None
+    team = None 
+    avg = None
     for el in results:
-      player, team = el
+      player, team, avg = el
+      # league view players/teams (unsorted)
       self.player_tree.insert("", tk.END, values=(player, team))
+    print('load player res', results)
+  
+  def load_players(self):
+    conn = sqlite3.connect("baseball_league_gui.db")
+    c = conn.cursor()
+    #c.execute("SELECT name, team_id FROM players")
+    c.execute("""
+      SELECT players.name, teams.name, players.AVG, players.number, players.positions
+      FROM players
+      JOIN teams on players.team_id = teams.id
+    """
+    )
+    results = c.fetchall()
+    results.sort(key=self.my_sort, reverse=True)
+    return results
 
-                                      # ----------------------------------------------------------------- #
+  # sorting purpose for refresh self.leaderboard on start
+  # ----------- NOT FUNCTIONING ----------------- #
+  def my_sort(self, x):
+    # sort by player avg
+    return x[2]
+  
+  def load_leaderboard(self):
+    
+    try:
+      self.app.clear_tree()
+      results = self.load_players()
+      #print('league\n', PBL)
+      #print('players\n', PBL.view_all())
+      print('db results', results)
+
+      if results:
+        tmp = []
+        for el in results:
+          #print(el)
+          player, team, avg, number, positions = el
+          load_team = PBL.find_team(team)
+          if load_team:
+            load_player = Player(player, number, team, positions)
+            load_team.add_player(load_player)
+          self.app.tree.insert('', tk.END, values=(player, team, avg))
+
+    except:
+      print('error accessing results')
+    finally:
+      #print(PBL.view_all())
+      print('completed loading players/team')
+    
+      #print('up leader indx', indx)
+      #self.app.clear_tree()
+
+                                   # ----------------------------------------------------------------- #
+
   # add team function 
   # deprecated #
   def add_team(self):
@@ -377,6 +438,7 @@ class BaseballApp():
       #print('new player', new_player)
     self.player_entry.delete(0, tk.END)
                                               # ------------------------------------------------------------------------------------ #
+  
   # update player stat
   def update_stat_db(self):
     stat = self.selected_option()
@@ -501,7 +563,7 @@ class BaseballApp():
     for indx, el in enumerate(self.app.leaderboard):
       if el[0] == name:
         self.app.leaderboard.pop(indx)
-        self.app.update_leaderboard(name, team, avg)
+        self.app.update_leaderboard(name, team, avg, self.app.leaderboard)
         #print('update stat - avg', avg)
         for i in range(len(self.app.leaderboard)-1, -1, -1):
           ##print(el)
@@ -607,7 +669,7 @@ if __name__ == "__main__":
   PBL = LinkedList('PBL')
   league_view = LeagueView(root)
   app = BaseballApp(root, league_view, PBL)
-  init_db(app.load_teams, app.load_players)
+  init_db(app.load_teams, app.load_players_tree, app.load_players, app.load_leaderboard)
   root.mainloop()
 
 

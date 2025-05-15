@@ -74,7 +74,7 @@ class LinkedList():
       ret = ''
       traverser = self.head 
       while traverser != None:
-        ret += f'Team:\n {traverser.team.name}\nPlayers:\n {[{x.name: x.positions[0]} for x in traverser.team.players]}'
+        ret += f'\nTeam: {traverser.team.name}\nPlayers: {[{x.name: x.positions[0]} for x in traverser.team.players]}'
         traverser = traverser.next
       return ret
     
