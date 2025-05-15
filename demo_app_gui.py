@@ -393,7 +393,7 @@ class BaseballApp():
       ##print('new player - avg', new_player.AVG)
 
       self.add_player_team(new_player, team)
-      self.app.add_leaderboard(new_player)
+      #self.app.add_leaderboard(new_player)
       ##print('new player:', new_player)
 
       conn = sqlite3.connect("baseball_league_gui.db")
@@ -405,6 +405,7 @@ class BaseballApp():
         #print(f"Found team: {team_id[0]}")
         c.execute("INSERT INTO players (name, number, positions, team_id) VALUES (?, ?, ?, ?)", (player_name, number, positions_json, team_id[0],))
         conn.commit()
+        self.load_leaderboard()
       else:
         print(f"No id found for team {team}")
         conn.close()
@@ -484,8 +485,7 @@ class BaseballApp():
         c.execute(query, params)
         conn.commit()
 
-        # GUI update stat
-        self.load_leaderboard()
+        
         '''# GUI update
         ret_board = update_player(self.league, ret_stat, stat, val)
         avg = "{:.3f}".format(float(ret_board.AVG))
@@ -512,6 +512,8 @@ class BaseballApp():
       print('completed player updates')
       #self.update_name.delete(0, tk.END)
       self.update_val.delete(0, tk.END)
+      # GUI update stat
+      self.load_leaderboard()
   
   def update_AVG(self, at_bats, hits):
     if at_bats == 0:
