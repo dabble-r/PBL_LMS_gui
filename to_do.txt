@@ -28,7 +28,8 @@
 2 - player number/position - sync to sqlite db DONE 
 3 - undo stat update -- reflected in leaderboard (avg), no sync to sqlite db
 4 - update stat of existing player in db, entered in previous session - update_db does not find player DONE
-5 - lag in turn GUI update - stat update but leaderboard lags one turn -- DONE
+5 - lag in turn GUI update - stat update but leaderboard lags one turn -- *************
+6 - async functionality - DONE
 
 # adding new player
 1 - add new player - duplicate value in league view DONE

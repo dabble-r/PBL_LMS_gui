@@ -129,7 +129,6 @@ class LeagueView():
     #print('up leader indx', indx)
     self.leaderboard.insert(indx, (name, team, avg))
     #print('lyst insert', lyst)
-    #self.clear_tree()
 
 class BaseballApp():
   # initialize
@@ -170,7 +169,7 @@ class BaseballApp():
     self.team_dropdown = ttk.Combobox(self.player_frame, textvariable=self.team_select)
     self.team_dropdown.grid(row=1, column=1)
     
-    tk.Button(self.player_frame, text="Add", command=self.add_player_db).grid(row=2, column=0, padx=(0,4), pady=4, sticky="ew")
+    tk.Button(self.player_frame, text="Add", command=self.run_async_add_player).grid(row=2, column=0, padx=(0,4), pady=4, sticky="ew")
 
     self.player_tree = ttk.Treeview(self.player_frame, columns=("Player", "Team"), show="headings")
     self.player_tree.heading("Player", text="Player Name")
@@ -321,30 +320,48 @@ class BaseballApp():
     c = conn.cursor()
     c.execute("SELECT id, name, AVG FROM players WHERE name = ?", (target_player,))
     result = c.fetchone()
-    print('result', result)
+    #print('result', result)
     if result:
       return result
 
   def update_leaderboard(self, target_player):
-    results = self.load_players()
+    print('update leaderboard')
+    result = self.load_one_player(target_player)
+    print('load one player:', result)
+    if result:
+      id, name, avg = result 
+      print('player stats:', id, name, avg, type(avg))
+      self.load_leaderboard()
+      print('leaderboard', self.app.leaderboard)
+
+    """result = self.load_one_player(target_player)
     # print('db results', results)
     players = self.app.tree.get_children()
-    print('players', players)
-
-    if results and players:
+    # print('players', players)
+    if result and players:
       for player in players:
         vals = self.app.tree.item(player, "values")
         #print('vals', vals)
+
+        # local tree values
         name, team, orig_avg = vals
+        self.find_partial_tuple_index(self.app.leaderboard, name, team)
         if name == target_player:
           #print('player match')
-          self.app.tree.delete(player)
-          #print('player deleted')
-          update_player = self.load_one_player(name)
-          upd_avg = update_player[2]
-          print('update player', update_player)
-          self.app.tree.insert('', tk.END, values=(name, team, upd_avg))
+          upd_avg = result[2]
+          #print(name, team)
+          indx = self.find_partial_tuple_index(self.app.leaderboard, name, team)
+          print('indx', indx)
+          self.app.leaderboard.remove(indx)
           self.app.update_leaderboard(name, team, upd_avg)
+          self.app.tree.delete(player)
+          #self.app.tree.insert('', tk.END, values=(name, team, upd_avg))
+    for i in range(len(self.app.leaderboard)-1,-1,-1):
+      ##print(el)
+      el = self.app.leaderboard[i]
+      print('leaderboard el', el)
+      self.app.tree.insert('', tk.END, values=(el[0], el[1], el[2]))"""
+    
 
                                    # ----------------------------------------------------------------- #
 
@@ -417,8 +434,7 @@ class BaseballApp():
       #print(self.league)
 
   # db - add player function
-  # async - run inside async task loop
-  def add_player_db(self):
+  async def add_player_db(self):
     player = self.player_entry.get()
     team = self.team_select.get()
     #print('team get:', team)
@@ -464,10 +480,68 @@ class BaseballApp():
     finally:
       conn.close()
       print('completed adding new player')
-      self.load_leaderboard()
       self.player_entry.delete(0, tk.END)
-
+    self.load_leaderboard()
+      
                                               # ------------------------------------------------------------------------------------ #
+  
+  # db - add player
+  # async - AI assist
+  async def add_player_db_1(self):
+    player = self.player_entry.get()
+    team = self.team_select.get()
+
+    if not player:
+        messagebox.showwarning("Input Error", "Please enter a player name.")
+        return
+
+    try:
+        print('Adding new player...\n')
+        
+        # Parse player details
+        raw_lst = list(map(lambda x: x.strip(), player.split(',')))
+        raw_lst.insert(0, team)
+        team_name = raw_lst[0]
+        player_name = raw_lst[1]
+        number = int(raw_lst[2])
+        positions_raw = raw_lst[3:]
+        positions_json = json.dumps(positions_raw)
+
+        # Format and add player to the team
+        new_player = Player.format_player(self, raw_lst)
+        self.add_player_team(new_player, team)
+
+        # Async database operations
+        async with aiosqlite.connect("baseball_league_gui.db") as conn:
+            # Fetch team ID
+            async with conn.execute("SELECT id FROM teams WHERE name = ?", (team_name,)) as cursor:
+              team_id = await cursor.fetchone()
+              if team_id:
+                  print(f"Found team: {team_id[0]}")
+                  
+                  # Insert player data
+                  await conn.execute(
+                      "INSERT INTO players (name, number, positions, team_id) VALUES (?, ?, ?, ?)",
+                      (player_name, number, positions_json, team_id[0])
+                  )
+                  
+                  await conn.commit()
+              else:
+                  print(f"No ID found for team {team}")
+
+    except Exception as e:
+        print(f"Error adding new player: {e}")
+
+    finally:
+        print("Completed adding new player")
+        #await conn.close()
+        self.player_entry.delete(0, tk.END)
+    self.load_leaderboard()
+        
+  # run async for tkinter -- currently in use as button command func
+  def run_async_add_player(self):
+    asyncio.run(self.add_player_db_1())  # Runs the async function safely
+
   # deprecated
   # add player function
   def add_player(self):
@@ -487,6 +561,7 @@ class BaseballApp():
     self.player_entry.delete(0, tk.END)
                                               # ------------------------------------------------------------------------------------ #
 
+  # run asycn for tkinter
   def run_async_update_player_1(self):
     try:
         loop = asyncio.get_running_loop()  # Get the current event loop
@@ -499,6 +574,7 @@ class BaseballApp():
     # Ensure the event loop runs by processing async tasks
     loop.run_until_complete(asyncio.sleep(0))
   
+  # run async for tkinter -- currently in use as button command func
   def run_async_update_player_2(self):
     asyncio.run(self.update_stat_db_1())  # Runs the async function safely
 
@@ -509,7 +585,7 @@ class BaseballApp():
     team = self.team_dropdown.get()
     val = int(self.update_val.get())
     ret_stat = f'{player}, {team}'
-    print(team, player, stat, val)
+    #print(team, player, stat, val)
 
     if not player:
         messagebox.showwarning("Input Error", "Please enter a player name.")
@@ -522,7 +598,7 @@ class BaseballApp():
                 "SELECT id, at_bats, hits, walks, so, hr, rbi, runs, singles, doubles, triples, sac_fly, SLG, AVG FROM players WHERE name = ?",
                 (player,)) as cursor:
                 result = await cursor.fetchone()
-                print("update result:", result)
+                #print("update result:", result)
 
             if result:
                 player_id, at_bats, hits, walks, so, hr, rbi, runs, singles, doubles, triples, sac_fly, slg, avg_db = result
@@ -556,8 +632,9 @@ class BaseballApp():
 
     finally:
         print("Completed player updates")
+        #await conn.close()
         self.update_val.delete(0, tk.END)
-        self.update_leaderboard(player)
+    self.update_leaderboard(player)
 
   # update player stat
   async def update_stat_db(self):
@@ -607,7 +684,7 @@ class BaseballApp():
         params = (val, new_BABIP, new_SLG, new_ISO, new_AVG, player_id)
         await c.execute(query, params)
         await conn.commit()
-        
+
       else:
         print(f"No id found for team {player}")
 
@@ -621,7 +698,7 @@ class BaseballApp():
       self.update_val.delete(0, tk.END)
       # GUI update stat
       #self.load_leaderboard()
-      self.update_leaderboard(player)
+    self.update_leaderboard(player)
      
   # remove player from db, league, and GUI
   def remove_player_all_locs(self):
@@ -660,12 +737,6 @@ class BaseballApp():
       # remove from GUI
       self.load_leaderboard()
       self.remove_one_player_tree(name)
-
-  # asycn create task - add player  - add player button
-  def run_async_add_player(self):
-    loop = asyncio.get_event_loop()
-    print('add loop', loop)
-    loop.create_task(self.add_player_db())  # Schedule task
 
   def update_AVG(self, at_bats, hits):
     if at_bats == 0:
@@ -788,6 +859,13 @@ class BaseballApp():
   def save_prompt(self):
     save_frame = Save()
 
+  def find_partial_tuple_index(self, lst):
+    for i, t in enumerate(lst):
+      print('search tuple', i, t)
+        #if isinstance(t, tuple) and len(t) >= 2 and t[0] == value1 and t[1] == value2:
+            #return i
+    #raise ValueError("No matching tuple found")
+  
 class Save():
   def __init__(self):
     # Ask the user to choose where to save the file
