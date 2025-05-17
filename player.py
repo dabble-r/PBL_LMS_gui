@@ -30,6 +30,7 @@ class Player():
     team = raw_lst[0]
     name = raw_lst[1]
     number = raw_lst[2]
+    #avg = self.AVG
     positions = raw_lst[3:]
     #print(raw_lst)
     #print('team', team)

@@ -29,6 +29,7 @@
 3 - undo stat update -- reflected in leaderboard (avg), no sync to sqlite db
 4 - update stat of existing player in db, entered in previous session - update_db does not find player DONE
 5 - lag in turn GUI update - stat update but leaderboard lags one turn -- *************
+    *** refactor all loading/refreshing funcs to async with sqlite as conn
 6 - async functionality - DONE
 
 # adding new player
