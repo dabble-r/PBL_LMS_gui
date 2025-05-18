@@ -860,6 +860,19 @@ class Save():
     else:
       print("Save aborted.")
 
+class Load():
+  def __init__(self):
+    self.file_path = self.user_path()
+  
+  def user_path(self):
+    self.file_path = filedialog.askopenfilename(
+        filetypes=[("SQLite Database", "*.db")],
+        title="Select Database"
+    )
+
+    if self.file_path:  # Check if a file was selected
+        print(f"Loaded database: {self.file_path}")  # You can replace this with actual loading logic
+
 if __name__ == "__main__":
   # AI assist - mount all elemtns on root
   # Initialize themed root window
