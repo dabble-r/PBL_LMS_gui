@@ -6,7 +6,10 @@
 1 - update DB -- DONE
 2 - determine file path -- DONE
 3 - save current DB to selected file path -- DONE
-4 - option to start new BD or load existing DB from local file path - 
+4 - option to start new BD or load existing DB from local file path - Mostly DONE
+  * should always prompt the user to load a DB
+  * if no DB in local working directory, there are no teams initialied, DB fails to launch
+  * when project built, user will not have a DB in local working directory, must prompt to load
 
 # individual player display 
 1 - select player from self.listbox and pop-up window with individual player stats: DONE
