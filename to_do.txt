@@ -12,29 +12,31 @@
 1 - select player from self.listbox and pop-up window with individual player stats
 
 # individual player creation 
-1 - notes/anecdotes section of player instance
-2 - display notes/anecdotes of individual player from pop-up GUI
-3 - player duplicate name - if player already exists, must enter new name
+1 - notes/anecdotes section of player instance:
+2 - display notes/anecdotes of individual player from pop-up GUI:
+3 - player duplicate name - if player already exists, must enter new name:
 
 # individual player deletion
-1 - user selects player form league view, delete button to remove: two options 1-remove entirely 2-remove from GUI
+1 - user selects player form league view, delete button to remove: two options 1-remove entirely 2-remove from GUI:
+2 - user delete player from all loctions form remove button: DONE
 
 # refresh/load teams and players 
 1 - GUI loads all teams and players upon starting program -- DONE
 2 - GUI loads all players to leaderboard upon start -- DONE
-3 - GUI loads all players to leaderboard upon start - current AVG not loaded, only default
+3 - GUI loads all players to leaderboard upon start - current AVG not loaded, only default: DONE
 
 # individual stat update:
 1 - player stats -- DONE
 2 - player number/position - sync to sqlite db DONE 
-3 - undo stat update -- reflected in leaderboard (avg), no sync to sqlite db
+3 - undo stat update -- reflected in leaderboard (avg), no sync to sqlite db: DONE
 4 - update stat of existing player in db, entered in previous session - update_db does not find player DONE
 5 - lag in turn GUI update - stat update but leaderboard lags one turn -- DONE
     *** refactor all loading/refreshing funcs to async with sqlite as conn
 6 - async functionality - DONE
 
 # adding new player
-1 - add new player - duplicate value in league view DONE
+1 - add new player - duplicate value in league view: DONE
 
 # GUI appearance
-1 - increase fint size overall
+1 - increase font size overall:
+2- modern theme and colors:

@@ -219,6 +219,7 @@ class BaseballApp():
     self.player_tree.grid(row=3, column=0, columnspan=2)
 
     # remove player button
+    # command=self.run_async_remove_player_all_locs
     tk.Button(self.player_frame, text="Remove", command=self.run_async_remove_player_all_locs).grid(row=2, column=1, padx=(4,0), pady=4, sticky="ew")
 
     # Player update frame
@@ -594,15 +595,23 @@ class BaseballApp():
         #self.app.refresh_treeview()
         #self.app.add_leaderboard(player)
         await self.update_leaderboard(player, flag=True)
-    
+  
+  # remove player message prompt
+  def remove_player_prompt(self):
+    selection = self.player_tree.selection()
+    name, team = self.player_tree.item(selection, "values")
+    response = messagebox.askquestion(title="Remove Options", message=f"Would you like to permanently remove {name}?")
+    # print('response:', response)
+    return response
+  
   # remove player from db, league, and GUI
   async def remove_player_all_locs(self):
     select_player = self.player_tree.selection()
+    name, team = self.player_tree.item(select_player, "values")
     #print('remove player - selection', select_player)
-    if select_player:
-      name, team = self.player_tree.item(select_player[0], "values")
-      #print(name, team)
+    user_response = self.remove_player_prompt()
 
+    if user_response == 'yes':
       # remove from league
       find_team = PBL.find_team(team)
       if find_team:
@@ -629,14 +638,22 @@ class BaseballApp():
             c.execute(query, (name,))
             conn.commit()
             print('player removed from DB!')
+
       except:
         print('remove player not deleted!')
+
       finally:
         # remove from GUI
         self.remove_one_player_tree(name)
         #self.load_leaderboard()
         await self.app.refresh_treeview()
 
+    else:
+      # remove selected player from leaderboard
+      self.app.leaderboard = [x for x in self.app.leaderboard if x[0] != name]
+      self.app.refresh_leaderboard_tree()
+      
+       
   # run async for tkinter
   # currently in use as button command func
   def run_async_remove_player_all_locs(self):
