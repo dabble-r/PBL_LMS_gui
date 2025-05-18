@@ -120,6 +120,7 @@ class LeagueView():
   # insort - sort avgs in leaderboard, find indx of new avg
   def insort_leaderboard(self, new_avg):
     avgs = [x[2] for x in self.leaderboard]
+    new_avg = float(new_avg)
     indx = bisect_right(avgs, new_avg)
     return indx
   
@@ -140,7 +141,7 @@ class LeagueView():
         self.leaderboard = [entry for entry in self.leaderboard if entry[0] != name]
 
     # Use the insort_leaderboard helper to get the index for insertion based on avg.
-    insertion_index = self.insort_leaderboard(str(avg))
+    insertion_index = self.insort_leaderboard(avg)
     self.leaderboard.insert(insertion_index, (name, team, avg))
 
     # Refresh the tree (GUI) to display the updated leaderboard.
@@ -381,7 +382,7 @@ class BaseballApp():
     if result:
       name, team, avg = result 
       #print('update leaderboard:', (name, team, avg, type(avg)))
-      self.app.update_leaderboard(name, team, str(avg), flag)
+      self.app.update_leaderboard(name, team, avg, flag)
       
                                   # ----------------------------------------------------------------- #
 
