@@ -124,26 +124,54 @@ class LeagueView():
     return indx
   
   # insert_leaderbaord
-  def update_leaderboard(self, name, team, avg):
-    indx = self.insort_leaderboard(avg)
-    #print('up leader indx', indx)
-    self.leaderboard.insert(indx, (name, team, avg))
-    #print('lyst insert', lyst)
-    self.clear_tree()
-  
-  def refresh_treeview(self):
-    # Clear current contents
-    for item in self.tree.get_children():
-        self.tree.delete(item)
+  def update_leaderboard(self, name, team, avg, flag=False):
+    """
+    Updates the leaderboard with the given player information.
 
-    # Re-fetch all data from the database
-    conn = sqlite3.connect("baseball_league_gui.db")
-    cursor = conn.cursor()
-    cursor.execute("SELECT name, team_id, at_bats, hits, AVG FROM players")  # Add more stats if needed
-    for row in cursor.fetchall():
-      name, team_id, at_bats, hits, avg = row
-      self.tree.insert('', 'end', values=(name, 'team', avg))
-    conn.close()
+    Parameters:
+      name (str): The name of the player.
+      team (str): The name of the team.
+      avg (float): The player's average.
+      flag (bool): False when adding a new player.
+                    True when updating an existing player's entry.
+    """
+    # If updating an existing player, remove any prior record for that player.
+    if flag:
+        self.leaderboard = [entry for entry in self.leaderboard if entry[0] != name]
+
+    # Use the insort_leaderboard helper to get the index for insertion based on avg.
+    insertion_index = self.insort_leaderboard(str(avg))
+    self.leaderboard.insert(insertion_index, (name, team, avg))
+
+    # Refresh the tree (GUI) to display the updated leaderboard.
+    self.refresh_leaderboard_tree()
+
+  def refresh_leaderboard_tree(self):
+    """
+    Clears the current tree view and repopulates it from the sorted leaderboard.
+    """
+    self.clear_tree()
+    # Assuming you want a descending order display, iterate in reverse.
+    for entry in reversed(self.leaderboard):
+      self.tree.insert('', tk.END, values=entry)
+
+  async def refresh_treeview(self):
+    self.clear_tree()
+
+    query = """
+    SELECT p.name, p.avg, t.name
+    FROM players AS p
+    JOIN teams AS t ON p.team_id = t.id
+    """
+  
+    async with aiosqlite.connect("baseball_league_gui.db") as conn:
+      async with conn.execute(query) as cursor:
+        results = await cursor.fetchall()
+
+      for row in results:
+        name, avg, team = row
+        self.tree.insert('', 'end', values=(name, team, avg))
+    await conn.close()
 
 class BaseballApp():
   # initialize
@@ -312,51 +340,53 @@ class BaseballApp():
       if results:
         
         for el in results:
-          print(el)
+          print('load leaderboard - player in db', el)
           player, team, avg, number, positions = el
           load_team = PBL.find_team(team)
           if load_team:
             load_player = Player(player, number, team, positions)
+            load_player.AVG = avg
             load_team.add_player(load_player)
-          #self.app.tree.insert('', tk.END, values=(player, team, avg))
-          self.app.add_leaderboard(load_player)
-
+            self.app.tree.insert('', tk.END, values=(player, team, avg))
+            self.app.update_leaderboard(player, team, load_player.AVG, flag=True)
+          
     except:
       print('error accessing results')
+
     finally:
       #print(PBL.view_all())
       print('completed loading players/team')
-  
+      
   async def load_one_player(self, target_player):
+    query = """
+    SELECT p.name, t.name AS team_name, p.avg
+    FROM players AS p
+    JOIN teams AS t ON p.team_id = t.id
+    WHERE p.name = ?
+    """
+    
     async with aiosqlite.connect("baseball_league_gui.db") as conn:
-      async with conn.execute("SELECT name, team_id, avg FROM players WHERE name = ?", (target_player,)) as cursor:
-        result = await cursor.fetchone()
-        print("load_one - Updated player:", result)
-        return result
+        async with conn.execute(query, (target_player,)) as cursor:
+            result = await cursor.fetchone()
+            if result is None:
+                print(f"No player found with the name: {target_player}")
+            else:
+                print("load_one - Updated player:", result)
+            return result
 
-  async def update_leaderboard(self, target_player):
+  async def update_leaderboard(self, target_player, flag):
     print('update leaderboard')
     result = await self.load_one_player(target_player)
-    print('after update:', result)
+    #print('after update:', result)
     if result:
-      name, team_id, avg = result 
-      #print('player stats update to leaderboard:', (name, team_id, avg))
-      vals = self.app.tree.get_children()
-      for player in vals:
-        stats = self.app.tree.item(player, "values")
-        print('stats in tree:', stats) 
-        if stats[0] == target_player:
-          #print('target found:', stats[0], target_player)
-          self.app.tree.delete(player)
-          self.app.tree.insert('', tk.END, values=(name, 'team', avg))
-          #print('deleted:', stats[0])
-          #print('after update:', result)
-          #print('deleted from tree:', player, stats[0])
-          
-                                   # ----------------------------------------------------------------- #
+      name, team, avg = result 
+      #print('update leaderboard:', (name, team, avg, type(avg)))
+      self.app.update_leaderboard(name, team, str(avg), flag)
+      
+                                  # ----------------------------------------------------------------- #
 
   
-                                      # ----------------------------------------------------------------- #
+                                  # ----------------------------------------------------------------- #
   
   # add team function - sqlite DB functionality
   def add_team_db(self):
@@ -425,15 +455,21 @@ class BaseballApp():
 
     try:
         print('Adding new player...\n')
-        
         # Parse player details
         raw_lst = list(map(lambda x: x.strip(), player.split(',')))
+
+        if len(raw_lst) < 3:
+          messagebox.showwarning("Input Error", "Please enter a player name, team name, and at least one position.")
+          return
+        
         raw_lst.insert(0, team)
         team_name = raw_lst[0]
         player_name = raw_lst[1]
         number = int(raw_lst[2])
         positions_raw = raw_lst[3:]
         positions_json = json.dumps(positions_raw)
+
+
 
         # Format and add player to the team
         new_player = Player.format_player(self, raw_lst)
@@ -468,23 +504,22 @@ class BaseballApp():
         #await conn.close()
         self.player_entry.delete(0, tk.END)
     #self.app.add_leaderboard(new_player)
-    self.app.refresh_treeview()
+    await self.app.refresh_treeview()
 
   # run async for tkinter
   # currently in use as button command func
   def run_async_add_player(self):
     asyncio.run(self.add_player_db_1())  # Runs the async function safely
 
- 
                                               # ------------------------------------------------------------------------------------ #
 
-  
   # run async for tkinter
   # currently in use as button command func
   def run_async_update_player_2(self):
     asyncio.run(self.update_stat_db_1())  # Runs the async function safely
 
   # AI assist
+  # currently in use
   async def update_stat_db_1(self):
     stat = self.selected_option()
     player = self.update_name.get().strip()
@@ -556,7 +591,10 @@ class BaseballApp():
         print("Completed player updates")
         #await conn.close()
         self.update_val.delete(0, tk.END)
-        self.app.refresh_treeview()
+        # creates unsorted leaderboard
+        #self.app.refresh_treeview()
+        #self.app.add_leaderboard(player)
+        await self.update_leaderboard(player, flag=True)
     
   # remove player from db, league, and GUI
   def remove_player_all_locs(self):
