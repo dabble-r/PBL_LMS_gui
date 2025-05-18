@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
+from ttkthemes import ThemedTk
 from linked_list import LinkedList
 from team import Team
 from player import Player
@@ -54,7 +55,9 @@ async def init_db(load_teams, load_players_tree, load_players, load_leaderboard)
     await load_leaderboard()
     conn.close()
 
+# ------------------------------------------------------------------------------------#
 # Functions
+# wtf if this function doing here???
 def add_team(team_entry):
     team_name = team_entry.get()
     if not team_name:
@@ -70,6 +73,7 @@ def add_team(team_entry):
         #load_teams(teams_list)
     except sqlite3.IntegrityError:
         messagebox.showerror("Error", "Team already exists.")
+# ------------------------------------------------------------------------------------#
 
 class LeagueView():
   def __init__(self, parent, leaderboard=[]):
@@ -78,8 +82,8 @@ class LeagueView():
     self.leaderboard = leaderboard
     
     # define leage view - leading players
-    tk.Label(self.frame, text='Leaderboard', padx=2, pady=2, font=("Arial", 16)).pack()
-    self.tree = ttk.Treeview(self.frame, columns=('Player', 'Team', 'AVG'), show='headings', style="Treeview")
+    tk.Label(self.frame, text='Leaderboard', padx=2, pady=2).pack()
+    self.tree = ttk.Treeview(self.frame, columns=('Player', 'Team', 'AVG'), show='headings')
     
     # display heading names
     self.tree.heading('Player', text='Player')
@@ -181,15 +185,11 @@ class BaseballApp():
     self.league = league 
     self.stack = Stack()
 
-    #ttk styles
-    style_treeview = ttk.Style(root)
-    style_treeview.configure("Treeview", font=('Arial', 16))
-
     # Team Management Frame
     self.team_frame = tk.Frame(root, padx=10, pady=10)
     self.team_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
-    tk.Label(self.team_frame, text="Team Name:", font=("Arial", 16)).grid(row=0, column=0)
+    tk.Label(self.team_frame, text="Team Name:").grid(row=0, column=0)
 
     self.team_entry = tk.Entry(self.team_frame)
     self.team_entry.grid(row=0, column=1)
@@ -197,30 +197,30 @@ class BaseballApp():
     tk.Button(self.team_frame, text="Add Team", command=self.add_team_db).grid(row=0, column=2)
     tk.Button(self.team_frame, text="Remove", command=self.remove_team_db).grid(row=1, column=2)
 
-    self.team_listbox = tk.Listbox(self.team_frame, height=10, justify='center', font=("Arial", 10))
+    self.team_listbox = tk.Listbox(self.team_frame, height=10, justify='center')
     self.team_listbox.grid(row=1, column=0, columnspan=3)
 
     # Player Management Frame
     self.player_frame = tk.Frame(root, padx=10, pady=10)
     self.player_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
-    tk.Label(self.player_frame, text="Player Name:\n(Name, Number, Positions)", font=("Arial", 16)).grid(row=0, column=0)
+    tk.Label(self.player_frame, text="Player Name:\n(Name, Number, Positions)").grid(row=0, column=0)
 
     self.player_entry = tk.Entry(self.player_frame)
     self.player_entry.grid(row=0, column=1)
     
-    tk.Label(self.player_frame, text="Team:", font=("Arial", 16)).grid(row=1, column=0)
+    tk.Label(self.player_frame, text="Team:").grid(row=1, column=0)
 
     self.team_select = tk.StringVar()
-    self.team_dropdown = ttk.Combobox(self.player_frame, textvariable=self.team_select, font=("Arial", 12))
+    self.team_dropdown = ttk.Combobox(self.player_frame, textvariable=self.team_select)
     self.team_dropdown.grid(row=1, column=1)
     
     tk.Button(self.player_frame, text="Add", command=self.run_async_add_player).grid(row=2, column=0, padx=(0,4), pady=4)
 
-    self.player_tree = ttk.Treeview(self.player_frame, columns=("Player", "Team"), show="headings", style="Treeview")
+    self.player_tree = ttk.Treeview(self.player_frame, columns=("Player", "Team"), show="headings", height=15)
     self.player_tree.heading("Player", text="Player")
     self.player_tree.heading("Team", text="Team")
-    self.player_tree.grid(row=3, column=0, columnspan=2, padx=50)
+    self.player_tree.grid(row=3, column=0, columnspan=4, padx=50)
 
     # remove player button
     # command=self.run_async_remove_player_all_locs
@@ -232,12 +232,12 @@ class BaseballApp():
     self.update_frame = tk.Frame(root, padx=10, pady=10)
     self.update_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
-    tk.Label(self.update_frame, text="Update Player:", font=("Arial", 16)).grid(row=0, column=1)
+    tk.Label(self.update_frame, text="Update Player:").grid(row=0, column=1)
 
     self.update_name = tk.Entry(self.update_frame)
     self.update_name.grid(row=0, column=2)
 
-    tk.Label(self.update_frame, text="Stat:", font=("Arial", 16)).grid(row=1, column=1)
+    tk.Label(self.update_frame, text="Stat:").grid(row=1, column=1)
 
     self.update_val = tk.Entry(self.update_frame)
     self.update_val.grid(row=1, column=2)
@@ -253,12 +253,17 @@ class BaseballApp():
     row = 2
     for el in options:
       tmp = el
-      tk.Radiobutton(self.update_frame, text=tmp, textvariable=tmp, value=tmp, variable=self.selected, command=self.selected_option, font=("Arial", 12)).grid(row=row, column=3, sticky='w')
+      tk.Radiobutton(self.update_frame, text=tmp, textvariable=tmp, value=tmp, variable=self.selected, command=self.selected_option).grid(row=row, column=3, sticky='w')
       tmp = None
       row += 1
     
     # save progress
     tk.Button(self.update_frame, text="Save", command=self.save_prompt).grid(row=15, column=2)
+
+    # populate individual player stat button for each player
+    x = 455
+    y = 250
+    tk.Button(self.player_frame, text='Stats', command=self.run_async_display_individual_players).place(x=x, y=y)
 
   def load_teams(self):
     #all_teams = teams_list.get(0, tk.END)
@@ -294,9 +299,6 @@ class BaseballApp():
     results = c.fetchall()
     #print(results)
 
-    x = 465
-    y = 170
-
     player = None
     team = None 
     avg = None
@@ -304,8 +306,6 @@ class BaseballApp():
     for el in results:
       player, team, avg = el
       self.player_tree.insert("", tk.END, values=(player, team))
-      tk.Button(self.player_frame, text='stat', command=print('stat'), height=1).place(x=x, y=y)
-      y -= 30
       
     #print('load player res', results)
 
@@ -369,6 +369,23 @@ class BaseballApp():
   async def load_one_player(self, target_player):
     query = """
     SELECT p.name, t.name AS team_name, p.avg
+    FROM players AS p
+    JOIN teams AS t ON p.team_id = t.id
+    WHERE p.name = ?
+    """
+    
+    async with aiosqlite.connect("baseball_league_gui.db") as conn:
+        async with conn.execute(query, (target_player,)) as cursor:
+            result = await cursor.fetchone()
+            if result is None:
+                print(f"No player found with the name: {target_player}")
+            else:
+                print("load_one - Updated player:", result)
+            return result
+        
+  async def load_one_player_all_stats(self, target_player):
+    query = """
+    SELECT *
     FROM players AS p
     JOIN teams AS t ON p.team_id = t.id
     WHERE p.name = ?
@@ -665,18 +682,39 @@ class BaseballApp():
   def run_async_remove_player_all_locs(self):
     asyncio.run(self.remove_player_all_locs())  # Runs the async function safely
 
+  def run_async_display_individual_players(self):
+    asyncio.run(self.display_individual_player())  # Runs the async function safely
+    
   # display individual player stats in message box popup
   # not functional - testing
-  def display_individual_player(self):
+  async def display_individual_player(self):
     selection = self.player_tree.selection()
     if selection:
-      self.show_player_stats()
       name, team = self.player_tree.item(selection, "values")
-      print('display player:', name, team)
-
-  # handle double click
-  def show_player_stats(self):
-    messagebox.showinfo("Double Clicked", title="Player Stats")
+      #print('display player:', name, team)
+      await self.show_player_stats(name)
+      
+  # load player and display
+  async def show_player_stats(self, name):
+    def unpack_positions(str):
+      ret = ''
+      unpack = json.loads(str)
+      ret += f"\nPrimary: {unpack[0]}"
+      if len(unpack) == 1:
+        return ret
+      #print(type(unpack), unpack)
+      for el in unpack:
+         ret += f"\n  Pos: {el}"
+      return ret
+          
+    result = await self.load_one_player_all_stats(name)
+    ret = ''
+    if result:
+      print('display one player all stats:', result)
+      #(15., 'Test2'., 1., 3., '["abc"]'., 5, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1.0, 0.0, 1.0, 0.0, 3, 'Rougarou') -- 22 values
+      player_id, name, number, team_id_1, positions, at_bats, hits, walks, so, hr, rbi, runs, singles, doubles, triples, sac_fly, babip, slg, avg_db, iso, team_id_2, team = result
+      ret += f"Name: {name}\nNumber: {number}\nId: {player_id}\nTeam: {team}\nTeam Id: {team_id_1}\nAVG: {avg_db}\nSLG: {slg}\nBABIP: {babip}\nISO: {iso}\nPositions: {unpack_positions(positions)}\nAt Bats: {at_bats}\nHits: {hits}\nWalks: {walks}\nSO: {so}\nHR: {hr}\nRuns: {rbi}\nRuns: {runs}\nSingles: {singles}\nDoubles: {doubles}\nTriples: {triples}\nSac Fly: {sac_fly}\n"
+      messagebox.showinfo(f'{name} stats', ret)
 
   def update_AVG(self, at_bats, hits):
     if at_bats == 0:
@@ -812,12 +850,32 @@ class Save():
       print("Save aborted.")
 
 if __name__ == "__main__":
-  root = tk.Tk()
+  # AI assist - mount all elemtns on root
+  # Initialize themed root window
+  root = ThemedTk(theme="radiance")
+
+  # Create a single container frame to hold all program elements
+  main_frame = ttk.Frame(root)
+  main_frame.pack(fill="both", expand=True)  # Ensure it scales properly
+
+  # Initialize objects with the root window as their parent
   PBL = LinkedList('PBL')
-  league_view = LeagueView(root)
-  app = BaseballApp(root, league_view, PBL)
+  league_view = LeagueView(main_frame)  # Mount on the main frame
+  app = BaseballApp(main_frame, league_view, PBL)  # Also mount here
+
+  # Initialize database asynchronously
   asyncio.run(init_db(app.load_teams, app.load_players_tree, app.load_players, app.load_leaderboard))
+
   root.mainloop()
+
+  # original code
+  #root = tk.Tk()
+  #root = ThemedTk(theme="radiance")
+  #PBL = LinkedList('PBL')
+  #league_view = LeagueView(root)
+  #app = BaseballApp(root, league_view, PBL)
+  #asyncio.run(init_db(app.load_teams, app.load_players_tree, app.load_players, app.load_leaderboard))
+  #root.mainloop()
 
 
 
