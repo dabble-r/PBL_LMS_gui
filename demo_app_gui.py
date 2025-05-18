@@ -14,46 +14,74 @@ from decimal import Decimal
 import asyncio
 import aiosqlite
 
+class Load():
+  def __init__(self):
+    self.prompt = self.load_prompt()
+    self.file_path = None
+  
+  def load_prompt(self):
+    response = messagebox.askquestion("Would like to start a new database?")
+    #print('load response:', response)
+    if response == 'yes':
+       self.user_path()
+    
+  def user_path(self):
+    self.file_path = filedialog.askopenfilename(
+        filetypes=[("SQLite Database", "*.db")],
+        title="Select Database"
+    )
+
+    if self.file_path:  # Check if a file was selected
+      print(f"Loaded database: {self.file_path}")  # You can replace this with actual loading logic
+      return self.file_path
+  
 # Database Setup
-async def init_db(load_teams, load_players_tree, load_players, load_leaderboard):
+async def init_db(load_teams, load_players_tree, load_players, load_leaderboard, file_path=None):
     #print('league:', PBL)
-    conn = sqlite3.connect("baseball_league_gui.db")
-    c = conn.cursor()
-    c.execute('''CREATE TABLE IF NOT EXISTS teams (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    name TEXT UNIQUE NOT NULL)''')
-    # Create players table with full stat fields
-    c.execute('''
-        CREATE TABLE IF NOT EXISTS players (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL,
-            number INTEGER,
-            team_id INTEGER,
-            positions TEXT,
-            at_bats INTEGER DEFAULT 0,
-            hits INTEGER DEFAULT 0,
-            walks INTEGER DEFAULT 0,
-            so INTEGER DEFAULT 0,
-            hr INTEGER DEFAULT 0,
-            rbi INTEGER DEFAULT 0,
-            runs INTEGER DEFAULT 0,
-            singles INTEGER DEFAULT 0,
-            doubles INTEGER DEFAULT 0,
-            triples INTEGER DEFAULT 0,
-            sac_fly INTEGER DEFAULT 0,
-            BABIP REAL DEFAULT 0.000,
-            SLG REAL DEFAULT 0.000,
-            AVG REAL DEFAULT 0.000,
-            ISO REAL DEFAULT 0.000,
-            FOREIGN KEY(team_id) REFERENCES teams(id)
-        )
-    ''')
-    conn.commit()
-    load_teams()
-    load_players_tree()
-    await load_players()
-    await load_leaderboard()
-    conn.close()
+    if file_path is None:
+      conn = sqlite3.connect("baseball_league_gui.db")
+    else:
+      conn = sqlite3.connect(f"{file_path}")
+
+      c = conn.cursor()
+
+      c.execute('''CREATE TABLE IF NOT EXISTS teams (
+                      id INTEGER PRIMARY KEY AUTOINCREMENT,
+                      name TEXT UNIQUE NOT NULL)''')
+      
+      # Create players table with full stat fields
+      c.execute('''
+          CREATE TABLE IF NOT EXISTS players (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              name TEXT NOT NULL,
+              number INTEGER,
+              team_id INTEGER,
+              positions TEXT,
+              at_bats INTEGER DEFAULT 0,
+              hits INTEGER DEFAULT 0,
+              walks INTEGER DEFAULT 0,
+              so INTEGER DEFAULT 0,
+              hr INTEGER DEFAULT 0,
+              rbi INTEGER DEFAULT 0,
+              runs INTEGER DEFAULT 0,
+              singles INTEGER DEFAULT 0,
+              doubles INTEGER DEFAULT 0,
+              triples INTEGER DEFAULT 0,
+              sac_fly INTEGER DEFAULT 0,
+              BABIP REAL DEFAULT 0.000,
+              SLG REAL DEFAULT 0.000,
+              AVG REAL DEFAULT 0.000,
+              ISO REAL DEFAULT 0.000,
+              FOREIGN KEY(team_id) REFERENCES teams(id)
+          )
+      ''')
+
+      conn.commit()
+      load_teams()
+      load_players_tree()
+      await load_players()
+      await load_leaderboard()
+      conn.close()
 
 # ------------------------------------------------------------------------------------#
 # Functions
@@ -847,8 +875,13 @@ class Save():
       # Connect to the source database (e.g., in-memory or existing)
       source_conn = sqlite3.connect("baseball_league_gui.db")
       cursor = source_conn.cursor()
-      cursor.execute("CREATE TABLE test (id INTEGER PRIMARY KEY, name TEXT);")
-      cursor.execute("INSERT INTO test (name) VALUES ('Alice');")
+
+      cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='test';")
+
+      if not cursor.fetchone():
+        cursor.execute("CREATE TABLE test (id INTEGER PRIMARY KEY, name TEXT);")
+        cursor.execute("INSERT INTO test (name) VALUES ('Alice');")
+      
       source_conn.commit()
       # Create the destination database at chosen path
       dest_conn = sqlite3.connect(self.file_path)
@@ -859,19 +892,6 @@ class Save():
       print(f"Database saved to: {self.file_path}")
     else:
       print("Save aborted.")
-
-class Load():
-  def __init__(self):
-    self.file_path = self.user_path()
-  
-  def user_path(self):
-    self.file_path = filedialog.askopenfilename(
-        filetypes=[("SQLite Database", "*.db")],
-        title="Select Database"
-    )
-
-    if self.file_path:  # Check if a file was selected
-        print(f"Loaded database: {self.file_path}")  # You can replace this with actual loading logic
 
 if __name__ == "__main__":
   # AI assist - mount all elemtns on root
@@ -887,8 +907,14 @@ if __name__ == "__main__":
   league_view = LeagueView(main_frame)  # Mount on the main frame
   app = BaseballApp(main_frame, league_view, PBL)  # Also mount here
 
-  # Initialize database asynchronously
-  asyncio.run(init_db(app.load_teams, app.load_players_tree, app.load_players, app.load_leaderboard))
+  loadDB = Load()
+  
+  if loadDB:
+    # Initialize database asynchronously
+    asyncio.run(init_db(app.load_teams, app.load_players_tree, app.load_players, app.load_leaderboard, file_path=loadDB))
+  else:
+    asyncio.run(init_db(app.load_teams, app.load_players_tree, app.load_players, app.load_leaderboard))
+
 
   root.mainloop()
 
