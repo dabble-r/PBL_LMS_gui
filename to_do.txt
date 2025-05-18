@@ -9,7 +9,7 @@
 4 - option to start new BD or load existing DB from local file path - 
 
 # individual player display 
-1 - select player from self.listbox and pop-up window with individual player stats
+1 - select player from self.listbox and pop-up window with individual player stats:
 
 # individual player creation 
 1 - notes/anecdotes section of player instance:
@@ -17,7 +17,7 @@
 3 - player duplicate name - if player already exists, must enter new name:
 
 # individual player deletion
-1 - user selects player form league view, delete button to remove: two options 1-remove entirely 2-remove from GUI:
+1 - user selects player form league view, delete button to remove: two options 1-remove entirely 2-remove from GUI leaderboard: DONE
 2 - user delete player from all loctions form remove button: DONE
 
 # refresh/load teams and players 
