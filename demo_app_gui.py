@@ -258,7 +258,7 @@ class BaseballApp():
       row += 1
     
     # save progress
-    tk.Button(self.update_frame, text="Save", command=self.save_prompt).grid(row=15, column=2)
+    tk.Button(self.update_frame, text="Save", command=self.save_prompt, width=5, height=2, font=('Arial', 12)).place(relx=0.8, rely=0.9)
 
     # populate individual player stat button for each player
     x = 455
