@@ -13,7 +13,6 @@ from decimal import Decimal
 import asyncio
 import aiosqlite
 
-
 # Database Setup
 async def init_db(load_teams, load_players_tree, load_players, load_leaderboard):
     #print('league:', PBL)
@@ -103,7 +102,7 @@ class LeagueView():
     name = player.name
     team = player.team
     avg = "{:.3f}".format(num)
-    print('add leaderboard', name,team,num,avg)
+    #print('add leaderboard', name,team,num,avg)
     self.update_leaderboard(name, team, avg)
     #print('leaderboard after update', self.leaderboard)
     for i in range(len(self.leaderboard)-1,-1,-1):
@@ -164,7 +163,6 @@ class LeagueView():
     FROM players AS p
     JOIN teams AS t ON p.team_id = t.id
     """
-  
     async with aiosqlite.connect("baseball_league_gui.db") as conn:
       async with conn.execute(query) as cursor:
         results = await cursor.fetchall()
@@ -221,7 +219,7 @@ class BaseballApp():
     self.player_tree.grid(row=3, column=0, columnspan=2)
 
     # remove player button
-    tk.Button(self.player_frame, text="Remove", command=self.remove_player_all_locs).grid(row=2, column=1, padx=(4,0), pady=4, sticky="ew")
+    tk.Button(self.player_frame, text="Remove", command=self.run_async_remove_player_all_locs).grid(row=2, column=1, padx=(4,0), pady=4, sticky="ew")
 
     # Player update frame
     options = ['at_bats', 'hits', 'walks', 'SO', 'HR', 'RBI', 'runs', 'singles', 'doubles', 'triples', 'sac_fly']
@@ -299,7 +297,7 @@ class BaseballApp():
       player, team, avg = el
       # league view players/teams (unsorted)
       self.player_tree.insert("", tk.END, values=(player, team))
-    print('load player res', results)
+    #print('load player res', results)
 
   def remove_one_player_tree(self, target_player):
     players = self.player_tree.get_children()
@@ -308,7 +306,7 @@ class BaseballApp():
       name = player[0]
       if name == target_player:
         self.player_tree.delete(el)
-        print("deleted player")
+        #print("deleted player")
       else:
         print('player not found in tree')
       
@@ -341,7 +339,7 @@ class BaseballApp():
       if results:
         
         for el in results:
-          print('load leaderboard - player in db', el)
+          #print('load leaderboard - player in db', el)
           player, team, avg, number, positions = el
           load_team = PBL.find_team(team)
           if load_team:
@@ -376,7 +374,7 @@ class BaseballApp():
             return result
 
   async def update_leaderboard(self, target_player, flag):
-    print('update leaderboard')
+    #print('update leaderboard')
     result = await self.load_one_player(target_player)
     #print('after update:', result)
     if result:
@@ -455,7 +453,7 @@ class BaseballApp():
         return
 
     try:
-        print('Adding new player...\n')
+        #print('Adding new player...\n')
         # Parse player details
         raw_lst = list(map(lambda x: x.strip(), player.split(',')))
 
@@ -476,7 +474,7 @@ class BaseballApp():
         new_player = Player.format_player(self, raw_lst)
         avg = new_player.AVG
         self.add_player_team(new_player, team)
-        print('add new player:\n', new_player)
+        #print('add new player:\n', new_player)
 
         # Async database operations
         async with aiosqlite.connect("baseball_league_gui.db") as conn:
@@ -484,7 +482,7 @@ class BaseballApp():
             async with conn.execute("SELECT id FROM teams WHERE name = ?", (team_name,)) as cursor:
               team_id = await cursor.fetchone()
               if team_id:
-                  print(f"Found team: {team_id[0]}")
+                  #print(f"Found team: {team_id[0]}")
                   
                   # Insert player data
                   await conn.execute(
@@ -539,7 +537,7 @@ class BaseballApp():
                 "SELECT id, at_bats, hits, walks, so, hr, rbi, runs, singles, doubles, triples, sac_fly, SLG, AVG FROM players WHERE name = ?",
                 (player,)) as cursor:
                 result_orig = await cursor.fetchone()
-                print("before update:", result_orig)
+                #print("before update:", result_orig)
 
             if result_orig:
                 player_id, at_bats, hits, walks, so, hr, rbi, runs, singles, doubles, triples, sac_fly, slg, avg_db = result_orig
@@ -561,7 +559,7 @@ class BaseballApp():
                   (player,)) as cursor:
 
                   result_upd = await cursor.fetchone()
-                  print('after update:', result_upd)
+                  #print('after update:', result_upd)
                 
                   if result_upd:
                     player_id, at_bats, hits, walks, so, hr, rbi, runs, singles, doubles, triples, sac_fly, slg, avg_db = result_upd
@@ -598,9 +596,9 @@ class BaseballApp():
         await self.update_leaderboard(player, flag=True)
     
   # remove player from db, league, and GUI
-  def remove_player_all_locs(self):
+  async def remove_player_all_locs(self):
     select_player = self.player_tree.selection()
-    print('remove player - selection', select_player)
+    #print('remove player - selection', select_player)
     if select_player:
       name, team = self.player_tree.item(select_player[0], "values")
       #print(name, team)
@@ -619,21 +617,30 @@ class BaseballApp():
         # sqlite db update
         c = conn.cursor()
         c.execute("SELECT * FROM players WHERE name = ?", (name,))
-        result = c.fetchall()[0]
-        #print('result', result)
+        result = c.fetchall()
+        #print('remove result', result)
+        
         if result:
-          name = result[1]
-          #print('remove name DB', name)
-          query = "DELETE FROM players where name = ?"
-          c.execute(query, (name,))
-          conn.commit()
-          print('player removed from DB!')
+          for el in result:
+            name = el[1]
+            #print('remove name DB', name)
+            #print('remove result el', el[1])
+            query = "DELETE FROM players where name = ?"
+            c.execute(query, (name,))
+            conn.commit()
+            print('player removed from DB!')
       except:
         print('remove player not deleted!')
+      finally:
+        # remove from GUI
+        self.remove_one_player_tree(name)
+        #self.load_leaderboard()
+        await self.app.refresh_treeview()
 
-      # remove from GUI
-      self.load_leaderboard()
-      self.remove_one_player_tree(name)
+  # run async for tkinter
+  # currently in use as button command func
+  def run_async_remove_player_all_locs(self):
+    asyncio.run(self.remove_player_all_locs())  # Runs the async function safely
 
   def update_AVG(self, at_bats, hits):
     if at_bats == 0:
