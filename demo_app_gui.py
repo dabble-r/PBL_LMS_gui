@@ -506,16 +506,27 @@ class BaseballApp():
             # Fetch team ID
             async with conn.execute("SELECT id FROM teams WHERE name = ?", (team_name,)) as cursor:
               team_id = await cursor.fetchone()
+
               if team_id:
-                  #print(f"Found team: {team_id[0]}")
                   
-                  # Insert player data
-                  await conn.execute(
-                      "INSERT INTO players (name, number, positions, team_id, AVG) VALUES (?, ?, ?, ?, ?)",
-                      (player_name, number, positions_json, team_id[0], avg)
-                  )
-                  
-                  await conn.commit()
+                  # check if player name already exists
+                  async with conn.execute("SELECT 1 FROM players WHERE name = ?", (player_name,)) as cursor:
+                    player_exists = await cursor.fetchone()
+                    #print('player exsits:', player_exists)
+
+                    if not player_exists:
+                       
+                      # Insert player data
+                      await conn.execute(
+                          "INSERT INTO players (name, number, positions, team_id, AVG) VALUES (?, ?, ?, ?, ?)",
+                          (player_name, number, positions_json, team_id[0], avg)
+                      )
+                      
+                      await conn.commit()
+                    
+                    else:
+                      messagebox.showwarning("Input Error", "Player name already exists. Try using full name.")
+                      return
                   
               else:
                   print(f"No ID found for team {team}")
@@ -710,7 +721,7 @@ class BaseballApp():
     result = await self.load_one_player_all_stats(name)
     ret = ''
     if result:
-      print('display one player all stats:', result)
+      #print('display one player all stats:', result)
       #(15., 'Test2'., 1., 3., '["abc"]'., 5, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1.0, 0.0, 1.0, 0.0, 3, 'Rougarou') -- 22 values
       player_id, name, number, team_id_1, positions, at_bats, hits, walks, so, hr, rbi, runs, singles, doubles, triples, sac_fly, babip, slg, avg_db, iso, team_id_2, team = result
       ret += f"Name: {name}\nNumber: {number}\nId: {player_id}\nTeam: {team}\nTeam Id: {team_id_1}\nAVG: {avg_db}\nSLG: {slg}\nBABIP: {babip}\nISO: {iso}\nPositions: {unpack_positions(positions)}\nAt Bats: {at_bats}\nHits: {hits}\nWalks: {walks}\nSO: {so}\nHR: {hr}\nRuns: {rbi}\nRuns: {runs}\nSingles: {singles}\nDoubles: {doubles}\nTriples: {triples}\nSac Fly: {sac_fly}\n"
