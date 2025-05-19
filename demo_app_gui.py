@@ -275,7 +275,7 @@ class BaseballApp():
     tk.Button(self.update_frame, text='Update', command=self.run_async_update_player_2).place(x=300, y=65)
 
     # Player reset functionality
-    tk.Button(self.update_frame, text="Undo", command=self.undo_update).place(x=300, y=100)
+    tk.Button(self.update_frame, text="Undo", command=self.undo_update_db).place(x=300, y=100)
 
     # populate radio buttons
     x = 125
@@ -671,21 +671,36 @@ class BaseballApp():
 
                 await conn.commit()
 
+                #async with conn.execute(
+                  #"SELECT id, at_bats, hits, walks, so, hr, rbi, runs, singles, doubles, triples, sac_fly, SLG, AVG FROM players WHERE name = ?",
+                  #(player,)) as cursor:
                 async with conn.execute(
-                  "SELECT id, at_bats, hits, walks, so, hr, rbi, runs, singles, doubles, triples, sac_fly, SLG, AVG FROM players WHERE name = ?",
-                  (player,)) as cursor:
+                                        """
+                                        SELECT p.id, p.at_bats, p.hits, p.walks, p.so, p.hr, p.rbi, p.runs, 
+                                              p.singles, p.doubles, p.triples, p.sac_fly, p.SLG, p.AVG, t.name AS team_name
+                                        FROM players p
+                                        JOIN teams t ON p.team_id = t.id
+                                        WHERE p.name = ?
+                                        """,
+                                        (player,)
+                                    ) as cursor:
 
                   result_upd = await cursor.fetchone()
                   #print('after update:', result_upd)
                 
                   if result_upd:
-                    player_id, at_bats, hits, walks, so, hr, rbi, runs, singles, doubles, triples, sac_fly, slg, avg_db = result_upd
+                    player_id, at_bats, hits, walks, so, hr, rbi, runs, singles, doubles, triples, sac_fly, slg, avg_db, team = result_upd
+                    #print('result upd:', result_upd)
+                    
                     
                     # Calculate updated stats
                     new_BABIP = self.update_BABIP(hits, hr, at_bats, so, sac_fly)
                     new_SLG = self.update_SLG(singles, doubles, triples, hr, at_bats)
                     new_ISO = self.update_ISO(doubles, triples, hr, slg, avg_db)
                     new_AVG = self.update_AVG(at_bats, hits)
+
+                    self.stack.add_node(team, player, stat, val)
+                    print('curr stack:', self.stack)
 
                   await conn.execute(
                     f"""
@@ -844,14 +859,18 @@ class BaseballApp():
   
                                         # --------------------------------------------------------------------------------------- #
   
-  def undo_update(self):
+  def undo_update_db(self):
+    #print('undo func - curr stack', self.stack)
     stat = self.stack.get_last().stat 
     val = int(self.stack.get_last().val)
     #print('type val - undo', type(val))
     player = self.stack.get_last().player
     team = self.stack.get_last().team
-    #print(team, player, stat, val)
+    #print('last stack undo', team, player, stat, val)
 
+    if team == 'team':
+      return
+    # undo last stat update in underlying league/linked list structure
     find_team = self.league.find_team(team)
     find_player = find_team.get_player(player)
     ##print('team', find_team, '\nplayer', player)
@@ -881,7 +900,11 @@ class BaseballApp():
       case 'sac_fly':
         find_player.set_sac_fly(-val)
     ##print(team, stat, val)
-    #print('after', find_player)    
+    #print('after', find_player)   
+
+    player = self.load_one_player(player) 
+    if player:
+      print('undo stat player:', player)
    
   def selected_option(self):
     #print(self.selected.get())
