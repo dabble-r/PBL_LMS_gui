@@ -277,12 +277,13 @@ class BaseballApp():
     tk.Button(self.update_frame, text="Undo", command=self.undo_update).grid(row=3, column=2)
 
     # populate radio buttons
-    row = 2
+    x = 125
+    y = 375
     for el in options:
       tmp = el
-      tk.Radiobutton(self.update_frame, text=tmp, textvariable=tmp, value=tmp, variable=self.selected, command=self.selected_option).grid(row=row, column=3, sticky='w')
+      tk.Radiobutton(self.update_frame, text=tmp, textvariable=tmp, value=tmp, variable=self.selected, command=self.selected_option).place(x=x, y=y)
       tmp = None
-      row += 1
+      y -= 25
     
     # save progress
     tk.Button(self.update_frame, text="Save", command=self.save_prompt, width=5, height=2, font=('Arial', 12)).place(relx=0.8, rely=0.9)
@@ -956,6 +957,7 @@ if __name__ == "__main__":
   # AI assist - mount all elemtns on root
   # Initialize themed root window
   root = ThemedTk(theme="radiance")
+  root.geometry("1500x750")
 
   # Create a single container frame to hold all program elements
   main_frame = ttk.Frame(root)
