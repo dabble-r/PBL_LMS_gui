@@ -18,6 +18,7 @@ import threading
 
 def load_prompt():
   response = messagebox.askquestion("Load DB", "Would like to start a new database?")
+
   #print('load response:', response)
   if response == 'no':
     load_path = user_path()
@@ -29,7 +30,7 @@ def load_prompt():
       db_name = simpledialog.askstring("DB Name", "Select a name for the new DB")
       # Joining path components
       new_path = os.path.join(db_dir, f"{db_name}.db")
-      print(f"Joined path: {new_path}")
+      #print(f"Joined path: {new_path}")
       #print('new path', new_path)
       return new_path
 
@@ -40,7 +41,7 @@ def user_path():
   )
 
   if file_path:  # Check if a file was selected
-    print("DB to load:", file_path)  # You can replace this with actual loading logic
+    #print("DB to load:", file_path)  # You can replace this with actual loading logic
     return file_path
   #file_path = filedialog.askopenfilename(
     #filetypes=[("SQLite Database", "*.db")],
@@ -108,7 +109,7 @@ class LeagueView():
     self.file_path = file_path
     
     # define leage view - leading players
-    tk.Label(self.frame, text='Leaderboard', padx=2, pady=2).pack()
+    tk.Label(self.frame, text='Leaderboard', padx=2, pady=2).pack(expand=True)
     self.tree = ttk.Treeview(self.frame, columns=('Player', 'Team', 'AVG'), show='headings')
     
     # display heading names
@@ -221,8 +222,8 @@ class BaseballApp():
     self.team_entry = tk.Entry(self.team_frame)
     self.team_entry.grid(row=0, column=1)
 
-    tk.Button(self.team_frame, text="Add Team", command=self.run_async_add_team).grid(row=0, column=2)
-    tk.Button(self.team_frame, text="Remove", command=self.run_async_remove_team_db).grid(row=1, column=2)
+    tk.Button(self.team_frame, text="Add Team", command=self.run_async_add_team_db).place(x=273, y=65)
+    tk.Button(self.team_frame, text="Remove", command=self.run_async_remove_team_db).place(x=277, y=100)
 
     self.team_listbox = tk.Listbox(self.team_frame, height=10, justify='center')
     self.team_listbox.grid(row=1, column=0, columnspan=3)
@@ -234,7 +235,7 @@ class BaseballApp():
     tk.Label(self.player_frame, text="Player Name:\n(Name, Number, Positions)").grid(row=0, column=0)
 
     self.player_entry = tk.Entry(self.player_frame)
-    self.player_entry.grid(row=0, column=1)
+    self.player_entry.grid(row=0, column=1, columnspan=3)
     
     tk.Label(self.player_frame, text="Team:").grid(row=1, column=0)
 
@@ -247,7 +248,7 @@ class BaseballApp():
     self.player_tree = ttk.Treeview(self.player_frame, columns=("Player", "Team"), show="headings", height=15)
     self.player_tree.heading("Player", text="Player")
     self.player_tree.heading("Team", text="Team")
-    self.player_tree.grid(row=3, column=0, columnspan=4, padx=50)
+    self.player_tree.grid(row=3, column=0, columnspan=3, padx=50)
 
     # remove player button
     # command=self.run_async_remove_player_all_locs
@@ -271,19 +272,19 @@ class BaseballApp():
 
     self.selected = tk.StringVar(value='at bat')
 
-    tk.Button(self.update_frame, text='Update', command=self.run_async_update_player_2).grid(row=2, column=2)
+    tk.Button(self.update_frame, text='Update', command=self.run_async_update_player_2).place(x=300, y=65)
 
     # Player reset functionality
-    tk.Button(self.update_frame, text="Undo", command=self.undo_update).grid(row=3, column=2)
+    tk.Button(self.update_frame, text="Undo", command=self.undo_update).place(x=300, y=100)
 
     # populate radio buttons
     x = 125
-    y = 375
+    y = 75
     for el in options:
       tmp = el
       tk.Radiobutton(self.update_frame, text=tmp, textvariable=tmp, value=tmp, variable=self.selected, command=self.selected_option).place(x=x, y=y)
       tmp = None
-      y -= 25
+      y += 25
     
     # save progress
     tk.Button(self.update_frame, text="Save", command=self.save_prompt, width=5, height=2, font=('Arial', 12)).place(relx=0.8, rely=0.9)
@@ -506,7 +507,7 @@ class BaseballApp():
   
   # run async for tkinter
   # currently in use as button command func
-  def run_async_add_team(self):
+  def run_async_add_team_db(self):
     asyncio.run(self.add_team_db())  # Runs the async function safely
   
   # refactor as ASYNC
@@ -957,7 +958,7 @@ if __name__ == "__main__":
   # AI assist - mount all elemtns on root
   # Initialize themed root window
   root = ThemedTk(theme="radiance")
-  root.geometry("1500x750")
+  root.geometry("1500x850")
 
   # Create a single container frame to hold all program elements
   main_frame = ttk.Frame(root)
@@ -967,7 +968,7 @@ if __name__ == "__main__":
   PBL = LinkedList('PBL')
   
   loadDB = load_prompt()
-  print('loaddb from main', loadDB)
+  #print('loaddb from main', loadDB)
 
   league_view = LeagueView(main_frame, loadDB)  # Mount on the main frame
 
