@@ -14,6 +14,7 @@ from decimal import Decimal
 import asyncio
 import aiosqlite
 import os
+import threading
 
 def load_prompt():
   response = messagebox.askquestion("Load DB", "Would like to start a new database?")
@@ -21,6 +22,7 @@ def load_prompt():
   if response == 'no':
     load_path = user_path()
     return load_path
+  
   else:
     db_dir = filedialog.askdirectory(title="Select a directory")
     if db_dir:
@@ -220,7 +222,7 @@ class BaseballApp():
     self.team_entry.grid(row=0, column=1)
 
     tk.Button(self.team_frame, text="Add Team", command=self.run_async_add_team).grid(row=0, column=2)
-    tk.Button(self.team_frame, text="Remove", command=self.remove_team_db).grid(row=1, column=2)
+    tk.Button(self.team_frame, text="Remove", command=self.run_async_remove_team_db).grid(row=1, column=2)
 
     self.team_listbox = tk.Listbox(self.team_frame, height=10, justify='center')
     self.team_listbox.grid(row=1, column=0, columnspan=3)
@@ -483,6 +485,7 @@ class BaseballApp():
     if not team_name:
         messagebox.showwarning("Input Error", "Please enter a team name.")
         return
+    
     try:
         conn = sqlite3.connect(self.file_path)
         c = conn.cursor()
@@ -493,8 +496,10 @@ class BaseballApp():
         new_team = Team(team_name)
         self.league.add_team(new_team)
         await self.load_teams()
+
     except sqlite3.IntegrityError:
         messagebox.showerror("Error", "Team already exists.")
+
     finally:
       self.team_entry.delete(0, tk.END)
   
@@ -504,7 +509,7 @@ class BaseballApp():
     asyncio.run(self.add_team_db())  # Runs the async function safely
   
   # refactor as ASYNC
-  def remove_team_db(self):
+  async def remove_team_db(self):
     team_name = self.team_entry.get()
     if not team_name:
         messagebox.showwarning("Input Error", "Please enter a team name.")
@@ -526,21 +531,26 @@ class BaseballApp():
         self.league.remove_team(team_name)
 
         # refresh gui 
-        self.load_teams()
+        await self.load_teams()
 
     except sqlite3.Error as e:
         messagebox.showerror("DB Error:", f"An error occurred: {e}.")
+
     finally:
       conn.close()
       self.team_entry.delete(0, tk.END)
       #print(self.league)
+  
+  def run_async_remove_team_db(self):
+    asyncio.run(self.remove_team_db())  # Runs the async function safely
+  
       
                                               # ------------------------------------------------------------------------------------ #
   
   # db - add player
   # async - AI assist
   # currently in use
-  async def add_player_db_1(self):
+  async def add_player_db(self):
     player = self.player_entry.get()
     team = self.team_select.get()
 
@@ -613,7 +623,7 @@ class BaseballApp():
   # run async for tkinter
   # currently in use as button command func
   def run_async_add_player(self):
-    asyncio.run(self.add_player_db_1())  # Runs the async function safely
+    asyncio.run(self.add_player_db())  # Runs the async function safely
 
                                               # ------------------------------------------------------------------------------------ #
 
@@ -889,8 +899,11 @@ class BaseballApp():
       #print(f'Error: {e}')
       return
   
+  # threading save function in background
+  # prevent GUI freezing
   def save_prompt(self):
-    save_frame = Save()
+    threading.Thread(target=Save.user_path, args=(self,), daemon=True).start()
+    #save = Save()
 
   def find_partial_tuple_index(self, lst):
     for i, t in enumerate(lst):
@@ -904,7 +917,7 @@ class Save():
     # Ask the user to choose where to save the file
     self.file_path = self.user_path() 
   
-  # refactor as ASYNC
+  # refactor as ASYNC ???
   def user_path(self):
     self.file_path = filedialog.asksaveasfilename(
       defaultextension=".db",
@@ -925,13 +938,17 @@ class Save():
         cursor.execute("INSERT INTO test (name) VALUES ('Alice');")
       
       source_conn.commit()
+
       # Create the destination database at chosen path
       dest_conn = sqlite3.connect(self.file_path)
       with dest_conn:
           source_conn.backup(dest_conn)
+
       source_conn.close()
       dest_conn.close()
+
       print(f"Database saved to: {self.file_path}")
+
     else:
       print("Save aborted.")
 
