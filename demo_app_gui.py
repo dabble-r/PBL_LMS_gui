@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import ttk, messagebox, filedialog
+from tkinter import ttk, messagebox, filedialog, simpledialog
 from ttkthemes import ThemedTk
 from linked_list import LinkedList
 from team import Team
@@ -13,101 +13,92 @@ import json
 from decimal import Decimal
 import asyncio
 import aiosqlite
+import os
 
-class Load():
-  def __init__(self):
-    self.prompt = self.load_prompt()
-    self.file_path = None
-  
-  def load_prompt(self):
-    response = messagebox.askquestion("Would like to start a new database?")
-    #print('load response:', response)
-    if response == 'yes':
-       self.user_path()
+def load_prompt():
+  response = messagebox.askquestion("Load DB", "Would like to start a new database?")
+  #print('load response:', response)
+  if response == 'no':
+    load_path = user_path()
+    return load_path
+  else:
+    db_name = simpledialog.askstring("DB Name", 'What would like to name the DB?')
+    # Joining path components
+    new_path = os.path.join("/home", "user", "documents", f"{db_name}.db")
+    print(f"Joined path: {new_path}")
+    #print('new path', new_path)
+    return new_path
+
+def user_path():
+  file_path = filedialog.askopenfilename(
+    filetypes=[("SQLite Database", "*.db")],
+    title="Select Database"
+  )
+
+  if file_path:  # Check if a file was selected
+    print("DB to load:", file_path)  # You can replace this with actual loading logic
+    print('db to load path', )
+    return file_path
     
-  def user_path(self):
-    self.file_path = filedialog.askopenfilename(
-        filetypes=[("SQLite Database", "*.db")],
-        title="Select Database"
-    )
-
-    if self.file_path:  # Check if a file was selected
-      print(f"Loaded database: {self.file_path}")  # You can replace this with actual loading logic
-      return self.file_path
-  
 # Database Setup
-async def init_db(load_teams, load_players_tree, load_players, load_leaderboard, file_path=None):
-    #print('league:', PBL)
-    if file_path is None:
-      conn = sqlite3.connect("baseball_league_gui.db")
-    else:
-      conn = sqlite3.connect(f"{file_path}")
+async def init_db(load_teams, load_players_tree, load_players, load_leaderboard, file_path="default"):
+  async with aiosqlite.connect(f"{file_path}.db") as conn:
+    await conn.execute("""
+        CREATE TABLE IF NOT EXISTS teams (
+            id INTEGER PRIMARY KEY,
+            name TEXT UNIQUE NOT NULL
+        );
+    """)
 
-      c = conn.cursor()
+    # Create players table with full stat fields
+    await conn.execute('''
+        CREATE TABLE IF NOT EXISTS players (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            number INTEGER,
+            team_id INTEGER,
+            positions TEXT,
+            at_bats INTEGER DEFAULT 0,
+            hits INTEGER DEFAULT 0,
+            walks INTEGER DEFAULT 0,
+            so INTEGER DEFAULT 0,
+            hr INTEGER DEFAULT 0,
+            rbi INTEGER DEFAULT 0,
+            runs INTEGER DEFAULT 0,
+            singles INTEGER DEFAULT 0,
+            doubles INTEGER DEFAULT 0,
+            triples INTEGER DEFAULT 0,
+            sac_fly INTEGER DEFAULT 0,
+            BABIP REAL DEFAULT 0.000,
+            SLG REAL DEFAULT 0.000,
+            AVG REAL DEFAULT 0.000,
+            ISO REAL DEFAULT 0.000,
+            FOREIGN KEY(team_id) REFERENCES teams(id)
+        )
+    ''')
 
-      c.execute('''CREATE TABLE IF NOT EXISTS teams (
-                      id INTEGER PRIMARY KEY AUTOINCREMENT,
-                      name TEXT UNIQUE NOT NULL)''')
-      
-      # Create players table with full stat fields
-      c.execute('''
-          CREATE TABLE IF NOT EXISTS players (
-              id INTEGER PRIMARY KEY AUTOINCREMENT,
-              name TEXT NOT NULL,
-              number INTEGER,
-              team_id INTEGER,
-              positions TEXT,
-              at_bats INTEGER DEFAULT 0,
-              hits INTEGER DEFAULT 0,
-              walks INTEGER DEFAULT 0,
-              so INTEGER DEFAULT 0,
-              hr INTEGER DEFAULT 0,
-              rbi INTEGER DEFAULT 0,
-              runs INTEGER DEFAULT 0,
-              singles INTEGER DEFAULT 0,
-              doubles INTEGER DEFAULT 0,
-              triples INTEGER DEFAULT 0,
-              sac_fly INTEGER DEFAULT 0,
-              BABIP REAL DEFAULT 0.000,
-              SLG REAL DEFAULT 0.000,
-              AVG REAL DEFAULT 0.000,
-              ISO REAL DEFAULT 0.000,
-              FOREIGN KEY(team_id) REFERENCES teams(id)
-          )
-      ''')
+    await conn.commit()
 
-      conn.commit()
-      load_teams()
-      load_players_tree()
-      await load_players()
-      await load_leaderboard()
-      conn.close()
+    async with conn.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='teams';") as cursor:
+      table_exists = await cursor.fetchone()
+      print(f"Table exists: {table_exists}")
 
-# ------------------------------------------------------------------------------------#
-# Functions
-# wtf if this function doing here???
-def add_team(team_entry):
-    team_name = team_entry.get()
-    if not team_name:
-        messagebox.showwarning("Input Error", "Please enter a team name.")
-        return
-    try:
-        conn = sqlite3.connect("baseball_league_gui.db")
-        c = conn.cursor()
-        c.execute("INSERT INTO teams (name) VALUES (?)", (team_name,))
-        conn.commit()
-        conn.close()
-        team_entry.delete(0, tk.END)
-        #load_teams(teams_list)
-    except sqlite3.IntegrityError:
-        messagebox.showerror("Error", "Team already exists.")
+      if table_exists:
+        await load_teams()
+        load_players_tree()
+        await load_players()
+        await load_leaderboard()
+
+    await conn.close()
+
 # ------------------------------------------------------------------------------------#
 
 class LeagueView():
-  def __init__(self, parent, leaderboard=[]):
+  def __init__(self, parent, file_path, leaderboard=[]):
     self.frame = tk.Frame(parent)
     self.frame.pack()
     self.leaderboard = leaderboard
+    self.file_path = file_path
     
     # define leage view - leading players
     tk.Label(self.frame, text='Leaderboard', padx=2, pady=2).pack()
@@ -195,7 +186,7 @@ class LeagueView():
     FROM players AS p
     JOIN teams AS t ON p.team_id = t.id
     """
-    async with aiosqlite.connect("baseball_league_gui.db") as conn:
+    async with aiosqlite.connect(self.file_path) as conn:
       async with conn.execute(query) as cursor:
         results = await cursor.fetchall()
 
@@ -206,12 +197,13 @@ class LeagueView():
 
 class BaseballApp():
   # initialize
-  def __init__(self, root, app, league=None):
+  def __init__(self, root, app, file_path, league=None):
     self.root = root
     self.root.title = 'PBL'
     self.app = app
     self.league = league 
     self.stack = Stack()
+    self.file_path = file_path
 
     # Team Management Frame
     self.team_frame = tk.Frame(root, padx=10, pady=10)
@@ -293,29 +285,41 @@ class BaseballApp():
     y = 250
     tk.Button(self.player_frame, text='Stats', command=self.run_async_display_individual_players).place(x=x, y=y)
 
-  def load_teams(self):
+  async def load_teams(self):
     #all_teams = teams_list.get(0, tk.END)
     #print(all_teams)
+    print('app file path', self.file_path)
     self.team_dropdown['values'] = []
-    conn = sqlite3.connect("baseball_league_gui.db")
-    c = conn.cursor()
-    c.execute("SELECT name FROM teams")
-    teams = [row[0] for row in c.fetchall()]
-    conn.close()
+    #teams = []
+
+    try:
+      async with aiosqlite.connect(self.file_path) as conn:
+        async with conn.execute("SELECT name FROM teams") as cursor:
+          #print('cursor load teams', cursor)
+          teams = await cursor.fetchall()
+          teams = [row[0] for row in teams]
+          #print('teams', teams)
+
+    except aiosqlite.Error as e:
+      print(f"Database error: {e}")
+
     self.team_dropdown["values"] = teams
+
     teams_listbox_curr = self.team_listbox.get(0, tk.END)
+
     for team in teams:
       db_team = Team(team)
       #db_team = Team(team)
       PBL.add_team(db_team)
       if team not in teams_listbox_curr:
         self.team_listbox.insert(tk.END, team)
-    #print(self.league)
+    
+    await conn.close()
   
   def load_players_tree(self):
     #all_players = self.player_tree.get_children()
     #print(all_players)
-    conn = sqlite3.connect("baseball_league_gui.db")
+    conn = sqlite3.connect(self.file_path)
     c = conn.cursor()
     #c.execute("SELECT name, team_id FROM players")
     c.execute("""
@@ -349,7 +353,7 @@ class BaseballApp():
         print('player not found in tree')
       
   async def load_players(self):
-    async with aiosqlite.connect("baseball_league_gui.db") as conn:
+    async with aiosqlite.connect(self.file_path) as conn:
       async with conn.execute("""
         SELECT players.name, teams.name, players.AVG, players.number, players.positions
         FROM players
@@ -402,7 +406,7 @@ class BaseballApp():
     WHERE p.name = ?
     """
     
-    async with aiosqlite.connect("baseball_league_gui.db") as conn:
+    async with aiosqlite.connect(self.file_path) as conn:
         async with conn.execute(query, (target_player,)) as cursor:
             result = await cursor.fetchone()
             if result is None:
@@ -419,7 +423,7 @@ class BaseballApp():
     WHERE p.name = ?
     """
     
-    async with aiosqlite.connect("baseball_league_gui.db") as conn:
+    async with aiosqlite.connect(self.file_path) as conn:
         async with conn.execute(query, (target_player,)) as cursor:
             result = await cursor.fetchone()
             if result is None:
@@ -449,7 +453,7 @@ class BaseballApp():
         messagebox.showwarning("Input Error", "Please enter a team name.")
         return
     try:
-        conn = sqlite3.connect("baseball_league_gui.db")
+        conn = sqlite3.connect(self.file_path)
         c = conn.cursor()
         c.execute("INSERT INTO teams (name) VALUES (?)", (team_name,))
         conn.commit()
@@ -469,7 +473,7 @@ class BaseballApp():
         messagebox.showwarning("Input Error", "Please enter a team name.")
         return
     try:
-        conn = sqlite3.connect("baseball_league_gui.db")
+        conn = sqlite3.connect(self.file_path)
         c = conn.cursor()
         # delete from sqlite db
         c.execute("DELETE FROM teams WHERE name = (?)", (team_name,))
@@ -530,7 +534,7 @@ class BaseballApp():
         #print('add new player:\n', new_player)
 
         # Async database operations
-        async with aiosqlite.connect("baseball_league_gui.db") as conn:
+        async with aiosqlite.connect(self.file_path) as conn:
             # Fetch team ID
             async with conn.execute("SELECT id FROM teams WHERE name = ?", (team_name,)) as cursor:
               team_id = await cursor.fetchone()
@@ -595,7 +599,7 @@ class BaseballApp():
         return
 
     try:
-        async with aiosqlite.connect("baseball_league_gui.db") as conn:
+        async with aiosqlite.connect(self.file_path) as conn:
             # Fetch player stats
             async with conn.execute(
                 "SELECT id, at_bats, hits, walks, so, hr, rbi, runs, singles, doubles, triples, sac_fly, SLG, AVG FROM players WHERE name = ?",
@@ -684,7 +688,7 @@ class BaseballApp():
         print('remove team not found!')
 
       # remove from DB
-      conn = sqlite3.connect("baseball_league_gui.db")
+      conn = sqlite3.connect(self.file_path)
       try:
         # sqlite db update
         c = conn.cursor()
@@ -873,7 +877,7 @@ class Save():
     # Only continue if the user selected a path
     if self.file_path:
       # Connect to the source database (e.g., in-memory or existing)
-      source_conn = sqlite3.connect("baseball_league_gui.db")
+      source_conn = sqlite3.connect(self.file_path)
       cursor = source_conn.cursor()
 
       cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='test';")
@@ -904,18 +908,16 @@ if __name__ == "__main__":
 
   # Initialize objects with the root window as their parent
   PBL = LinkedList('PBL')
-  league_view = LeagueView(main_frame)  # Mount on the main frame
-  app = BaseballApp(main_frame, league_view, PBL)  # Also mount here
-
-  loadDB = Load()
   
-  if loadDB:
-    # Initialize database asynchronously
-    asyncio.run(init_db(app.load_teams, app.load_players_tree, app.load_players, app.load_leaderboard, file_path=loadDB))
-  else:
-    asyncio.run(init_db(app.load_teams, app.load_players_tree, app.load_players, app.load_leaderboard))
+  loadDB = load_prompt()
+  print('loaddb from main', loadDB)
 
+  league_view = LeagueView(main_frame, loadDB)  # Mount on the main frame
 
+  app = BaseballApp(main_frame, league_view, loadDB, league=PBL)  # Also mount here
+  
+  asyncio.run(init_db(app.load_teams, app.load_players_tree, app.load_players, app.load_leaderboard, file_path=loadDB))
+  
   root.mainloop()
 
   # original code

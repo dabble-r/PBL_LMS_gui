@@ -190,3 +190,21 @@ def update_stat(self):
       print('completed adding new player')
       self.player_entry.delete(0, tk.END)
     await self.load_leaderboard()
+
+# Functions
+# wtf if this function doing here???
+def add_team(team_entry):
+    team_name = team_entry.get()
+    if not team_name:
+        messagebox.showwarning("Input Error", "Please enter a team name.")
+        return
+    try:
+        conn = sqlite3.connect("baseball_league_gui.db")
+        c = conn.cursor()
+        c.execute("INSERT INTO teams (name) VALUES (?)", (team_name,))
+        conn.commit()
+        conn.close()
+        team_entry.delete(0, tk.END)
+        #load_teams(teams_list)
+    except sqlite3.IntegrityError:
+        messagebox.showerror("Error", "Team already exists.")
