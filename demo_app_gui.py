@@ -275,7 +275,7 @@ class BaseballApp():
     tk.Button(self.update_frame, text='Update', command=self.run_async_update_player_2).place(x=300, y=65)
 
     # Player reset functionality
-    tk.Button(self.update_frame, text="Undo", command=self.undo_update_db).place(x=300, y=100)
+    tk.Button(self.update_frame, text="Undo", command=self.run_async_undo_update_db).place(x=300, y=100)
 
     # populate radio buttons
     x = 125
@@ -641,7 +641,7 @@ class BaseballApp():
     player = self.update_name.get().strip()
     team = self.team_dropdown.get()
     val = int(self.update_val.get())
-    #print(team, player, stat, val)
+    #print('curr update:', team, player, stat, val)
 
     if not player:
         messagebox.showwarning("Input Error", "Please enter a player name.")
@@ -701,6 +701,8 @@ class BaseballApp():
 
                     self.stack.add_node(team, player, stat, val)
                     print('curr stack:', self.stack)
+                    #print('last node stack:', self.stack.get_last())
+                    #print('curr stat', stat)
 
                   await conn.execute(
                     f"""
@@ -709,7 +711,9 @@ class BaseballApp():
                     WHERE id = ?
                     """,
                     (new_BABIP, new_SLG, new_ISO, new_AVG, player_id))  # Proper parameter tuple
-                    
+                  
+                  
+
                   await conn.commit()
                 
             else:
@@ -859,21 +863,23 @@ class BaseballApp():
   
                                         # --------------------------------------------------------------------------------------- #
   
-  def undo_update_db(self):
+  async def undo_update_db(self):
+    if self.stack.is_empty():
+      #print('stack is empty')
+      return
+    
     #print('undo func - curr stack', self.stack)
     stat = self.stack.get_last().stat 
-    val = int(self.stack.get_last().val)
+    val = -int(self.stack.get_last().val)
     #print('type val - undo', type(val))
     player = self.stack.get_last().player
     team = self.stack.get_last().team
     #print('last stack undo', team, player, stat, val)
-
-    if team == 'team':
-      return
+    
     # undo last stat update in underlying league/linked list structure
     find_team = self.league.find_team(team)
     find_player = find_team.get_player(player)
-    ##print('team', find_team, '\nplayer', player)
+    #print('team', find_team, '\nplayer', player)
 
     #print('last:',find_player)
     match stat:
@@ -902,9 +908,94 @@ class BaseballApp():
     ##print(team, stat, val)
     #print('after', find_player)   
 
-    player = self.load_one_player(player) 
-    if player:
-      print('undo stat player:', player)
+    # undo update stat form db
+    # update leaderboard accordingly
+    try:
+        async with aiosqlite.connect(self.file_path) as conn:
+          # Fetch player stats
+  
+          async with conn.execute(
+              "SELECT id, at_bats, hits, walks, so, hr, rbi, runs, singles, doubles, triples, sac_fly, SLG, AVG FROM players WHERE name = ?",
+              (player,)) as cursor:
+
+              result_orig = await cursor.fetchone()
+              #print("before update:", result_orig)
+
+          if result_orig:
+              player_id, at_bats, hits, walks, so, hr, rbi, runs, singles, doubles, triples, sac_fly, slg, avg_db = result_orig
+
+              # Perform the  update query (update stat)
+              await conn.execute(
+                  f"""
+                  UPDATE players 
+                  SET {stat} = {stat} + ?
+                  WHERE id = ?
+                  """,
+                  (val, player_id)
+              )
+
+              await conn.commit()
+
+              #async with conn.execute(
+                #"SELECT id, at_bats, hits, walks, so, hr, rbi, runs, singles, doubles, triples, sac_fly, SLG, AVG FROM players WHERE name = ?",
+                #(player,)) as cursor:
+              async with conn.execute(
+                                      """
+                                      SELECT p.id, p.at_bats, p.hits, p.walks, p.so, p.hr, p.rbi, p.runs, 
+                                            p.singles, p.doubles, p.triples, p.sac_fly, p.SLG, p.AVG, t.name AS team_name
+                                      FROM players p
+                                      JOIN teams t ON p.team_id = t.id
+                                      WHERE p.name = ?
+                                      """,
+                                      (player,)
+                                  ) as cursor:
+
+                result_upd = await cursor.fetchone()
+                #print('after update:', result_upd)
+              
+                if result_upd:
+                  player_id, at_bats, hits, walks, so, hr, rbi, runs, singles, doubles, triples, sac_fly, slg, avg_db, team = result_upd
+                  #print('result upd:', result_upd)
+                  
+                  
+                  # Calculate updated stats
+                  new_BABIP = self.update_BABIP(hits, hr, at_bats, so, sac_fly)
+                  new_SLG = self.update_SLG(singles, doubles, triples, hr, at_bats)
+                  new_ISO = self.update_ISO(doubles, triples, hr, slg, avg_db)
+                  new_AVG = self.update_AVG(at_bats, hits)
+
+                  self.stack.remove_last()
+                  print('curr stack:', self.stack)
+                  #print('last node stack:', self.stack.get_last())
+                  #print('curr stat', stat)
+
+                await conn.execute(
+                  f"""
+                  UPDATE players
+                  SET BABIP = ?, SLG = ?, ISO = ?, AVG = ?
+                  WHERE id = ?
+                  """,
+                  (new_BABIP, new_SLG, new_ISO, new_AVG, player_id))  # Proper parameter tuple
+
+                await conn.commit()
+              
+          else:
+            print(f"No id found for player {player}")
+
+    except Exception as e:
+      print(f"Error updating {stat} for {player}: {e}")
+
+    finally:
+      print("Completed player updates")
+      #await conn.close()
+      self.update_val.delete(0, tk.END)
+      # creates unsorted leaderboard
+      #self.app.refresh_treeview()
+      #self.app.add_leaderboard(player)
+      await self.update_leaderboard(player, flag=True)
+
+  def run_async_undo_update_db(self):
+    asyncio.run(self.undo_update_db())  # Runs the async function safely
    
   def selected_option(self):
     #print(self.selected.get())

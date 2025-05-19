@@ -5,9 +5,9 @@ class Node():
     self.next = next
 
 class Node_stack():
-  def __init__(self, team, player, stat, val, next=None):
+  def __init__(self, team, player, stat, val):
     self.team = team 
     self.player = player
     self.stat = stat 
     self.val = val 
-    self.next = next
+    self.next = None

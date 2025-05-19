@@ -1,10 +1,9 @@
 import math
 from node import Node_stack
 
-# preserves last 25 actions
 class Stack():
   def __init__(self):
-    self.name = "Stack Actions"
+    self.name = "Undo Stat Stack"
     self.head = None
     self.default = Node_stack('team', 'player', 'stat', 0)
 
@@ -17,6 +16,7 @@ class Stack():
     indx = 1
     while curr is not None:
       ret += f"\nStack {indx}: {curr.team}-{curr.player}-{curr.stat}-{curr.val}"
+      indx += 1
       curr = curr.next
     return ret
   
@@ -24,22 +24,22 @@ class Stack():
     return self.head is None
   
   def get_size(self):
-    if self.is_empty:
-      return self.default
+    if self.is_empty():
+      return
     count = 0
     curr = self.head 
     while curr is not None:
-      coutn += 1 
+      count += 1 
       curr = curr.next 
     return count
   
   def get_first(self):
-    if self.is_empty:
+    if self.is_empty():
       return self.default
     return self.head
   
   def get_last(self):
-    if self.is_empty:
+    if self.is_empty():
       return self.default
     curr = self.head 
     while curr.next is not None:
@@ -54,11 +54,11 @@ class Stack():
       curr = self.head 
       while curr.next is not None:
         curr = curr.next 
-      curr = new_node
+      curr.next = new_node
   
   def remove_last(self):
-    if self.is_empty:
-      return 0
+    if self.is_empty():
+      return 'Stack is empty'
     prev = None
     curr = self.head 
     while curr.next is not None:
