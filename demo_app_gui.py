@@ -22,12 +22,15 @@ def load_prompt():
     load_path = user_path()
     return load_path
   else:
-    db_name = simpledialog.askstring("DB Name", 'What would like to name the DB?')
-    # Joining path components
-    new_path = os.path.join("/home", "user", "documents", f"{db_name}.db")
-    print(f"Joined path: {new_path}")
-    #print('new path', new_path)
-    return new_path
+    db_dir = filedialog.askdirectory(title="Select a directory")
+    if db_dir:
+      db_name = simpledialog.askstring("DB Name", "Select a name for the new DB")
+      # Joining path components
+      new_path = os.path.join(db_dir, f"{db_name}.db")
+      print(f"Joined path: {new_path}")
+      #print('new path', new_path)
+      return new_path
+    #db_dir = filedialog.askdirectory(title="Select a directory")
 
 def user_path():
   file_path = filedialog.askopenfilename(
@@ -37,12 +40,15 @@ def user_path():
 
   if file_path:  # Check if a file was selected
     print("DB to load:", file_path)  # You can replace this with actual loading logic
-    print('db to load path', )
     return file_path
+  #file_path = filedialog.askopenfilename(
+    #filetypes=[("SQLite Database", "*.db")],
+    #title="Select Database"
+  #)
     
 # Database Setup
-async def init_db(load_teams, load_players_tree, load_players, load_leaderboard, file_path="default"):
-  async with aiosqlite.connect(f"{file_path}.db") as conn:
+async def init_db(load_teams, load_players_tree, load_players, load_leaderboard, file_path):
+  async with aiosqlite.connect(file_path) as conn:
     await conn.execute("""
         CREATE TABLE IF NOT EXISTS teams (
             id INTEGER PRIMARY KEY,
@@ -214,7 +220,7 @@ class BaseballApp():
     self.team_entry = tk.Entry(self.team_frame)
     self.team_entry.grid(row=0, column=1)
 
-    tk.Button(self.team_frame, text="Add Team", command=self.add_team_db).grid(row=0, column=2)
+    tk.Button(self.team_frame, text="Add Team", command=self.run_async_add_team).grid(row=0, column=2)
     tk.Button(self.team_frame, text="Remove", command=self.remove_team_db).grid(row=1, column=2)
 
     self.team_listbox = tk.Listbox(self.team_frame, height=10, justify='center')
@@ -290,7 +296,7 @@ class BaseballApp():
     #print(all_teams)
     print('app file path', self.file_path)
     self.team_dropdown['values'] = []
-    #teams = []
+    teams = []
 
     try:
       async with aiosqlite.connect(self.file_path) as conn:
@@ -447,7 +453,7 @@ class BaseballApp():
                                   # ----------------------------------------------------------------- #
   
   # add team function - sqlite DB functionality
-  def add_team_db(self):
+  async def add_team_db(self):
     team_name = self.team_entry.get()
     if not team_name:
         messagebox.showwarning("Input Error", "Please enter a team name.")
@@ -461,11 +467,16 @@ class BaseballApp():
         #self.team_listbox.insert(tk.END, team_name)
         new_team = Team(team_name)
         self.league.add_team(new_team)
-        self.load_teams()
+        await self.load_teams()
     except sqlite3.IntegrityError:
         messagebox.showerror("Error", "Team already exists.")
     finally:
       self.team_entry.delete(0, tk.END)
+  
+  # run async for tkinter
+  # currently in use as button command func
+  def run_async_add_team(self):
+    asyncio.run(self.add_team_db())  # Runs the async function safely
   
   def remove_team_db(self):
     team_name = self.team_entry.get()
@@ -916,7 +927,7 @@ if __name__ == "__main__":
 
   app = BaseballApp(main_frame, league_view, loadDB, league=PBL)  # Also mount here
   
-  asyncio.run(init_db(app.load_teams, app.load_players_tree, app.load_players, app.load_leaderboard, file_path=loadDB))
+  asyncio.run(init_db(app.load_teams, app.load_players_tree, app.load_players, app.load_leaderboard, loadDB))
   
   root.mainloop()
 

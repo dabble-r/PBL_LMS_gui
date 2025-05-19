@@ -6,7 +6,7 @@
 1 - update DB -- DONE
 2 - determine file path -- DONE
 3 - save current DB to selected file path -- DONE
-4 - option to start new BD or load existing DB from local file path - Mostly DONE
+4 - option to start new BD or load existing DB from local file path - Mostly DONE ************ load/save/create functional DONE
   * should always prompt the user to load a DB
   * if no DB in local working directory, there are no teams initialied, DB fails to launch
   * when project built, user will not have a DB in local working directory, must prompt to load
@@ -42,4 +42,8 @@
 
 # GUI appearance
 1 - increase font size overall: DONe
-2- modern theme and colors: DONe
+2- modern theme and colors: DONE 
+3 - respitions stats radio buttons 
+
+# ASYNC refactor
+1 - go throuhg all DB functions, and refactor fully async
