@@ -30,7 +30,6 @@ def load_prompt():
       print(f"Joined path: {new_path}")
       #print('new path', new_path)
       return new_path
-    #db_dir = filedialog.askdirectory(title="Select a directory")
 
 def user_path():
   file_path = filedialog.askopenfilename(
@@ -91,7 +90,7 @@ async def init_db(load_teams, load_players_tree, load_players, load_leaderboard,
 
       if table_exists:
         await load_teams()
-        load_players_tree()
+        await load_players_tree()
         await load_players()
         await load_leaderboard()
 
@@ -322,17 +321,43 @@ class BaseballApp():
     
     await conn.close()
   
-  def load_players_tree(self):
+  # to refactor as ASYNC
+  async def load_players_tree(self):
     #all_players = self.player_tree.get_children()
     #print(all_players)
-    conn = sqlite3.connect(self.file_path)
+    try:
+      async with aiosqlite.connect(self.file_path) as conn:
+        async with conn.execute("""
+                            SELECT players.name, teams.name, players.AVG
+                            FROM players
+                            JOIN teams on players.team_id = teams.id
+                          """
+                                ) as cursor:
+          results = await cursor.fetchall()
+          print('load player tree', results)
+          
+          if results:
+            player = None
+            team = None 
+            avg = None
+
+            for el in results:
+              player, team, avg = el
+              self.player_tree.insert("", tk.END, values=(player, team))
+      
+            #print('load player res', results)
+    except aiosqlite.Error as e:
+      print(f"Database error: {e}")
+
+
+    """conn = sqlite3.connect(self.file_path)
     c = conn.cursor()
     #c.execute("SELECT name, team_id FROM players")
-    c.execute("""
+    c.execute("
       SELECT players.name, teams.name, players.AVG
       FROM players
       JOIN teams on players.team_id = teams.id
-    """
+    "
     )
     results = c.fetchall()
     #print(results)
@@ -343,7 +368,7 @@ class BaseballApp():
 
     for el in results:
       player, team, avg = el
-      self.player_tree.insert("", tk.END, values=(player, team))
+      self.player_tree.insert("", tk.END, values=(player, team))"""
       
     #print('load player res', results)
 
@@ -478,6 +503,7 @@ class BaseballApp():
   def run_async_add_team(self):
     asyncio.run(self.add_team_db())  # Runs the async function safely
   
+  # refactor as ASYNC
   def remove_team_db(self):
     team_name = self.team_entry.get()
     if not team_name:
@@ -878,6 +904,7 @@ class Save():
     # Ask the user to choose where to save the file
     self.file_path = self.user_path() 
   
+  # refactor as ASYNC
   def user_path(self):
     self.file_path = filedialog.asksaveasfilename(
       defaultextension=".db",

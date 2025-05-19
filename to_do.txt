@@ -10,6 +10,7 @@
   * should always prompt the user to load a DB
   * if no DB in local working directory, there are no teams initialied, DB fails to launch
   * when project built, user will not have a DB in local working directory, must prompt to load
+5 - after saving the db, user unable to quit the window
 
 # individual player display 
 1 - select player from self.listbox and pop-up window with individual player stats: DONE
@@ -47,3 +48,6 @@
 
 # ASYNC refactor
 1 - go throuhg all DB functions, and refactor fully async
+      *** load players there
+      *** remove team DB
+      *** user path
